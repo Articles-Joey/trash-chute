@@ -67,7 +67,7 @@ function LeftPanelContent(props) {
                             if (isFullscreen) {
                                 exitFullscreen()
                             } else {
-                                requestFullscreen('maze-game-page')
+                                requestFullscreen('trash-chute-game-page')
                             }
                         }}
                     >
@@ -134,7 +134,7 @@ function LeftPanelContent(props) {
                         }}
                     >
                         <i className="fad fa-ufo"></i>
-                        Teleport to Top
+                        Teleport Top
                     </ArticlesButton>
 
                     <button
