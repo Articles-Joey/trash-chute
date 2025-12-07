@@ -7,7 +7,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 // const getLocalStorage = (key) => JSON.parse(window.localStorage.getItem(key))
 // const setLocalStorage = (key, value) => window.localStorage.setItem(key, JSON.stringify(value))
 
-export const useStore = create()(
+export const useGameStore = create()(
     persist(
         (set, get) => ({
 
