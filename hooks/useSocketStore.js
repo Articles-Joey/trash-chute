@@ -16,6 +16,9 @@ export const useSocketStore = create((set) => ({
             reconnection: true,
             reconnectionDelay: 5000,
             reconnectionDelayMax: 10000,
+            query: {
+                "client": "trash-chute",
+            },
         });
         newSocket.connect();
         set({ socket: newSocket });

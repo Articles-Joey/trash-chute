@@ -2,9 +2,12 @@ import useSWR from "swr";
 
 // import { useSelector, useDispatch } from 'react-redux';
 
-import axios from "axios";
 
-const fetcher = (url) => axios.get(url).then((res) => res.data);
+const fetcher = async (url) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Network response was not ok');
+    return res.json();
+};
 
 const useUserFriends = () => {
 

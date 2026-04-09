@@ -16,21 +16,32 @@ import { Player } from "./Player";
 import { FPV } from "./FPV";
 import TopCheckpoint from "./TopCheckpoint";
 import Obstacles from "./Obstacles";
+import Ramp from "./Ramp";
+import Wall from "./Wall";
+import { ModelSkybox } from "../Models/Forest_clearing_1_top_skybox";
+import { useStore } from "@/hooks/useStore";
 
 function GameCanvas(props) {
 
+    const debug = useStore(state => state.debug);
+
     const {
-        debug,
+        // debug,
         controlType,
         topCheckpoint
     } = useGameStore(state => ({
-        debug: state.debug,
+        // debug: state.debug,
         controlType: state.controlType,
         topCheckpoint: state.topCheckpoint
     }));
 
     let gameContent = (
         <>
+
+            <ModelSkybox 
+                scale={300}
+            />
+
             {controlType == "Mouse and Keyboard" &&
                 <Player />
             }
@@ -99,7 +110,7 @@ function GameCanvas(props) {
     let physicsContent
     if (debug) {
         physicsContent = (
-            <Debug>
+            <Debug color="black" scale={1}>
                 {gameContent}
             </Debug>
         )
@@ -110,7 +121,15 @@ function GameCanvas(props) {
     }
 
     return (
-        <Canvas camera={{ position: [0, -2, -10], fov: 50 }}>
+        <Canvas 
+            camera={{ 
+                position: [0, -2, -10], 
+                fov: 50,
+                far: 10000.0 
+            }}
+            id="game-canvas"
+            shadows
+        >
 
             {controlType !== "Mouse and Keyboard" &&
                 <OrbitControls
@@ -122,7 +141,7 @@ function GameCanvas(props) {
                 sunPosition={[0, 10, 0]}
             />
 
-            <ambientLight intensity={5} />
+            <ambientLight intensity={2} />
             {/* <spotLight intensity={30000} position={[-50, 100, 50]} angle={5} penumbra={1} /> */}
 
             {controlType == "Mouse and Keyboard" &&
@@ -133,7 +152,7 @@ function GameCanvas(props) {
                 />
             }
 
-            <Physics>
+            <Physics defaultContactMaterial={{ friction: 0, restitution: 0 }}>
 
                 {physicsContent}
 
@@ -152,47 +171,6 @@ function Ground({ args, position }) {
         type: 'Static',
         args: args,
         position: position,
-    }))
-
-    return (
-        <mesh ref={ref} castShadow>
-            <boxGeometry args={args} />
-            <meshStandardMaterial color="gray" />
-        </mesh>
-    )
-
-}
-
-function Wall({ args, position }) {
-
-    const [ref, api] = useBox(() => ({
-        mass: 0,
-        type: 'Static',
-        args: args,
-        position: position,
-    }))
-
-    return (
-        <mesh ref={ref} castShadow>
-            <boxGeometry args={args} />
-            <meshStandardMaterial
-                color="gray"
-                transparent={true}
-                opacity={0.5}
-            />
-        </mesh>
-    )
-
-}
-
-function Ramp({ args, position, rotation }) {
-
-    const [ref, api] = useBox(() => ({
-        mass: 0,
-        type: 'Static',
-        args: args,
-        position: position,
-        rotation: rotation
     }))
 
     return (

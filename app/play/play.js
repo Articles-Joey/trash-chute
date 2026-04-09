@@ -12,12 +12,16 @@ import Script from 'next/script'
 
 import ArticlesButton from '@/components/UI/Button';
 
-import useFullscreen from '@/hooks/useFullScreen';
+// import useFullscreen from '@/hooks/useFullScreen';
+import useFullscreen from '@articles-media/articles-dev-box/useFullscreen';
+
 import { useControllerStore } from '@/hooks/useControllerStore';
 
 import { useLocalStorageNew } from '@/hooks/useLocalStorageNew';
 import LeftPanelContent from '@/components/Game/LeftPanel';
 import { useSocketStore } from '@/hooks/useSocketStore';
+import SprintMeter from '@/components/UI/SprintMeter';
+import CameraZoomIndicator from '@/components/UI/CameraZoomIndicator';
 
 const GameCanvas = dynamic(() => import('@/components/Game/GameCanvas'), {
     ssr: false,
@@ -77,16 +81,16 @@ export default function GamePage() {
     const { isFullscreen, requestFullscreen, exitFullscreen } = useFullscreen();
 
     let panelProps = {
-        server,
-        players,
-        touchControlsEnabled,
-        setTouchControlsEnabled,
+        // server,
+        // players,
+        // touchControlsEnabled,
+        // setTouchControlsEnabled,
         reloadScene,
         // controllerState,
-        isFullscreen,
-        requestFullscreen,
-        exitFullscreen,
-        setShowMenu
+        // isFullscreen,
+        // requestFullscreen,
+        // exitFullscreen,
+        // setShowMenu
     }
 
     const game_name = 'Trash Chute'
@@ -133,11 +137,9 @@ export default function GamePage() {
             /> */}
 
             <div className='panel-left card rounded-0 d-none d-lg-flex'>
-
                 <LeftPanelContent
                     {...panelProps}
                 />
-
             </div>
 
             {/* <div className='game-info'>
@@ -155,6 +157,10 @@ export default function GamePage() {
                 <GameCanvas
                     key={sceneKey}
                 />
+
+                <SprintMeter />
+
+                <CameraZoomIndicator />
 
             </div>
 

@@ -19,6 +19,7 @@ export const FPV = ({ location, setLocation, menuOpen }) => {
         <PointerLockControls
             args={[camera, gl.domElement]}
             onUpdate={handleUpdate}
+            selector="#game-canvas"
         />
     )
 

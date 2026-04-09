@@ -78,6 +78,15 @@ export const useGameStore = create()(
 
             tagCounter: 0,
             setTagCounter: (tagCounter) => set({ tagCounter }),
+
+            sprintMeter: 1,          // 0..1 normalized
+            sprintOnCooldown: false,
+            setSprintMeter: (meter, onCooldown) => set({ sprintMeter: meter, sprintOnCooldown: onCooldown }),
+
+            isThirdPerson: false,
+            cameraDistance: 6,
+            setIsThirdPerson: (isThirdPerson) => set({ isThirdPerson }),
+            setCameraDistance: (cameraDistance) => set({ cameraDistance }),
         }),
         {
             name: 'trash-chute-game-storage', // name of the item in the storage (must be unique)

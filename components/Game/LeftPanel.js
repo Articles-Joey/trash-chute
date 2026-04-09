@@ -9,15 +9,20 @@ import ArticlesButton from "@/components/UI/Button";
 import { useSocketStore } from "@/hooks/useSocketStore";
 import { useGameStore } from "@/hooks/useGameStore";
 import { Dropdown, DropdownButton } from "react-bootstrap";
+// import useFullscreen from "@/hooks/useFullScreen";
+import useFullscreen from '@articles-media/articles-dev-box/useFullscreen';
+import { useStore } from "@/hooks/useStore";
 
 function LeftPanelContent(props) {
 
     const {
-        isFullscreen,
-        requestFullscreen,
-        exitFullscreen,
+        // isFullscreen,
+        // requestFullscreen,
+        // exitFullscreen,
         reloadScene
     } = props;
+
+    const { isFullscreen, requestFullscreen, exitFullscreen } = useFullscreen();
 
     const {
         socket,
@@ -25,9 +30,15 @@ function LeftPanelContent(props) {
         socket: state.socket,
     }));
 
+    const toggleDarkMode = useStore(state => state.toggleDarkMode);
+    const darkMode = useStore(state => state.darkMode);
+    const setShowSettingsModal = useStore(state => state.setShowSettingsModal);
+    const debug = useStore(state => state.debug);
+    const setDebug = useStore(state => state.setDebug);
+
     const {
-        debug,
-        setDebug,
+        // debug,
+        // setDebug,
         api,
         setTopCheckpoint,
         topCheckpoint
@@ -67,7 +78,7 @@ function LeftPanelContent(props) {
                             if (isFullscreen) {
                                 exitFullscreen()
                             } else {
-                                requestFullscreen('trash-chute-game-page')
+                                requestFullscreen()
                             }
                         }}
                     >
@@ -75,6 +86,31 @@ function LeftPanelContent(props) {
                         {!isFullscreen && <span><i className='fad fa-expand'></i></span>}
                         <span>Fullscreen</span>
                     </ArticlesButton>
+
+                    <div
+                        className="d-flex w-50"
+                    >
+                        <ArticlesButton
+                            small
+                            className="w-100"
+                            onClick={() => {
+                                setShowSettingsModal(true)
+                            }}
+                        >
+                            <i className="fad fa-cog"></i>
+                            <span>Settings</span>
+                        </ArticlesButton>
+                        <ArticlesButton
+                            small
+                            className=""
+                            active={darkMode}
+                            onClick={() => {
+                                toggleDarkMode()
+                            }}
+                        >
+                            <i className="fad fa-sun"></i>
+                        </ArticlesButton>
+                    </div>
 
                     <ArticlesButton
                         size="sm"
@@ -128,7 +164,7 @@ function LeftPanelContent(props) {
                         className="w-50"
                         disabled={!topCheckpoint}
                         onClick={() => {
-                            api.position.set(
+                            api?.position?.set(
                                 0, 55.98, 94.25
                             );
                         }}

@@ -21,16 +21,22 @@ export function Model(props) {
   const { previewConfig } = props
 
   useEffect(() => {
+    if (!actions) return;
 
-    console.log("Actions", actions)
-    Object.values(actions).forEach((a) => a.stop());
+    // console.log("Actions", actions)
+    // Stop all animations before playing the requested one
+    Object.values(actions).forEach((a) => a?.stop());
 
-    if (props.action) {
-      actions[props.action].play();
-    } else {
-      actions[`Idle`].play();
+    const actionToPlay = props.action || 'Idle';
+    if (actions[actionToPlay]) {
+      actions[actionToPlay].reset().fadeIn(0.2).play();
     }
 
+    return () => {
+      if (actions[actionToPlay]) {
+        actions[actionToPlay].fadeOut(0.2);
+      }
+    };
   }, [actions, props.action]);
 
   return (

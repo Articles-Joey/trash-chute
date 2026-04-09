@@ -1,5 +1,7 @@
 import { useSphere } from "@react-three/cannon";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useMemo } from "react";
+import { ModelSpikyBall } from "@/components/Models/Spiky Ball";
+import { ModelStylizedRock } from "@/components/Models/Stylized_rock";
 
 function Obstacles() {
 
@@ -55,15 +57,22 @@ function Obstacle({ args, position, rotation }) {
         type: 'Dynamic',
         args: args,
         position: position,
-        rotation: rotation
+        rotation: rotation,
+        angularVelocity: [
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+        ],
+        userData: { obstacle: true, spikyBall: ModelComponent === ModelSpikyBall },
     }))
 
-    // Generate a random color
-    const randomColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    const ModelComponent = useMemo(() => (Math.random() > 0.5 ? ModelSpikyBall : ModelStylizedRock), []);
+    const isSpikyBall = ModelComponent === ModelSpikyBall;
+    const scale = useMemo(() => args[0] * (isSpikyBall ? 1.5 : 2.5), []);
 
     useEffect(() => {
 
-        api.position.subscribe((p) => {
+        const unsubscribe = api.position.subscribe((p) => {
 
             if (p[1] < -10) {
 
@@ -73,19 +82,32 @@ function Obstacle({ args, position, rotation }) {
                     position[2],
                 );
 
+                api.rotation.set(
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2,
+                    Math.random() * Math.PI * 2,
+                );
+
                 api.velocity.set(0, 0, 0);
+
+                api.angularVelocity.set(
+                    (Math.random() - 0.5) * 10,
+                    (Math.random() - 0.5) * 10,
+                    (Math.random() - 0.5) * 10,
+                );
 
             }
 
         })
 
+        return () => unsubscribe();
+
     }, [api.position])
 
     return (
-        <mesh ref={ref} castShadow>
-            <sphereGeometry args={args} />
-            <meshStandardMaterial color={randomColor} />
-        </mesh>
+        <group ref={ref} castShadow>
+            <ModelComponent scale={scale} />
+        </group>
     )
 
 }

@@ -15,6 +15,7 @@ import { useLocalStorageNew } from '@/hooks/useLocalStorageNew';
 // import IsDev from '@/components/IsDev';
 // import { ChromePicker } from 'react-color';
 import { useSocketStore } from '@/hooks/useSocketStore';
+import { useStore } from '@/hooks/useStore';
 
 // import GameScoreboard from 'components/Games/GameScoreboard'
 
@@ -22,15 +23,15 @@ import { useSocketStore } from '@/hooks/useSocketStore';
 //     ssr: false,
 // });
 
-const InfoModal = dynamic(
-    () => import('@/components/UI/InfoModal'),
-    { ssr: false }
-)
+// const InfoModal = dynamic(
+//     () => import('@/components/UI/InfoModal'),
+//     { ssr: false }
+// )
 
-const SettingsModal = dynamic(
-    () => import('@/components/UI/SettingsModal'),
-    { ssr: false }
-)
+// const SettingsModal = dynamic(
+//     () => import('@/components/UI/SettingsModal'),
+//     { ssr: false }
+// )
 
 // const PrivateGameModal = dynamic(
 //     () => import('app/(site)/community/games/four-frogs/components/PrivateGameModal'),
@@ -53,16 +54,33 @@ export default function LobbyPage() {
     // const userReduxState = useSelector((state) => state.auth.user_details)
     const userReduxState = false
 
-    const [nickname, setNickname] = useLocalStorageNew("game:nickname", userReduxState.display_name)
+    // const [nickname, setNickname] = useLocalStorageNew("game:nickname", userReduxState.display_name)
 
-    const [showInfoModal, setShowInfoModal] = useState(false)
-    const [showSettingsModal, setShowSettingsModal] = useState(false)
-    const [showPrivateGameModal, setShowPrivateGameModal] = useState(false)
+    const nickname = useStore((state) => state.nickname)
+    const setNickname = useStore((state) => state.setNickname)
+    const toggleDarkMode = useStore((state) => state.toggleDarkMode)
+    const randomNickname = useStore((state) => state.randomNickname)
 
-    const [lobbyDetails, setLobbyDetails] = useState({
-        players: [],
-        games: [],
-    })
+    const showInfoModal = useStore((state) => state.showInfoModal)
+    const setShowInfoModal = useStore((state) => state.setShowInfoModal)
+
+    const showCreditsModal = useStore((state) => state.showCreditsModal)
+    const setShowCreditsModal = useStore((state) => state.setShowCreditsModal)
+
+    const lobbyDetails = useStore((state) => state.lobbyDetails)
+    const setLobbyDetails = useStore((state) => state.setLobbyDetails)
+
+    const showSettingsModal = useStore((state) => state.showSettingsModal)
+    const setShowSettingsModal = useStore((state) => state.setShowSettingsModal)
+
+    // const [showInfoModal, setShowInfoModal] = useState(false)
+    // const [showSettingsModal, setShowSettingsModal] = useState(false)
+    // const [showPrivateGameModal, setShowPrivateGameModal] = useState(false)
+
+    // const [lobbyDetails, setLobbyDetails] = useState({
+    //     players: [],
+    //     games: [],
+    // })
 
     useEffect(() => {
 
@@ -102,7 +120,7 @@ export default function LobbyPage() {
 
         <div className={`${game_key}-landing-page`}>
 
-            {showInfoModal &&
+            {/* {showInfoModal &&
                 <InfoModal
                     show={showInfoModal}
                     setShow={setShowInfoModal}
@@ -114,7 +132,7 @@ export default function LobbyPage() {
                     show={showSettingsModal}
                     setShow={setShowSettingsModal}
                 />
-            }
+            } */}
 
             {/* {showPrivateGameModal &&
                 <PrivateGameModal
@@ -159,15 +177,25 @@ export default function LobbyPage() {
                                     setValue={setNickname}
                                     noMargin
                                 /> */}
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    id="nickname"
-                                    value={nickname}
-                                    onChange={(e) => {
-                                        setNickname(e.target.value)
-                                    }}
-                                />
+                                <div className="d-flex align-items-center">
+                                    <input
+                                        type="text"
+                                        value={nickname}
+                                        onChange={(e) => {
+                                            setNickname(e.target.value)
+                                        }}
+                                        className={`form-control form-control-sm`}
+                                    />
+                                    <ArticlesButton
+                                        small
+                                        className=""
+                                        onClick={() => {
+                                            randomNickname()
+                                        }}
+                                    >
+                                        <i className="fad fa-random"></i>
+                                    </ArticlesButton>
+                                </div>
                             </div>
 
                             <div className='mt-1' style={{ fontSize: '0.8rem' }}>Visible to all players</div>
@@ -260,31 +288,46 @@ export default function LobbyPage() {
 
                     <div className="card-footer d-flex flex-wrap justify-content-center">
 
-                        <ArticlesButton
-                            className={`w-50`}
-                            small
-                            onClick={() => {
-                                setShowSettingsModal(prev => !prev)
-                            }}
-                        >
-                            <i className="fad fa-cog"></i>
-                            Settings
-                        </ArticlesButton>
+                        <div className="d-flex w-50">
+                            <ArticlesButton
+                                className={`w-100`}
+                                small
+                                onClick={() => {
+                                    setShowSettingsModal(prev => !prev)
+                                }}
+                            >
+                                <i className="fad fa-cog"></i>
+                                Settings
+                            </ArticlesButton>
+                            <ArticlesButton
+                                className={``}
+                                small
+                                onClick={() => {
+                                    toggleDarkMode()
+                                }}
+                            >
+                                <i className="fad fa-moon"></i>
+                                {/* Dark Mode */}
+                            </ArticlesButton>
+                        </div>
 
                         <ArticlesButton
                             className={`w-50`}
                             small
                             onClick={() => {
-                                setShowInfoModal({
-                                    game: game_name
-                                })
+                                setShowInfoModal(true)
                             }}
                         >
                             <i className="fad fa-info-square"></i>
-                            Rules & Controls
+                            Info
                         </ArticlesButton>
 
-                        <Link href={'/'} className='w-50'>
+                        <Link
+                            href={'https://github.com/Articles-Joey/trash-chute'} // Replace with your GitHub repository URL
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-50"
+                        >
                             <ArticlesButton
                                 className={`w-100`}
                                 small
@@ -292,8 +335,8 @@ export default function LobbyPage() {
 
                                 }}
                             >
-                                <i className="fad fa-sign-out fa-rotate-180"></i>
-                                Leave Game
+                                <i className="fab fa-github"></i>
+                                GitHub
                             </ArticlesButton>
                         </Link>
 
@@ -301,9 +344,7 @@ export default function LobbyPage() {
                             className={`w-50`}
                             small
                             onClick={() => {
-                                setShowInfoModal({
-                                    game: game_name
-                                })
+                                setShowCreditsModal(true)
                             }}
                         >
                             <i className="fad fa-users"></i>
