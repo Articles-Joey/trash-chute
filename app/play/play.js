@@ -22,6 +22,7 @@ import LeftPanelContent from '@/components/Game/LeftPanel';
 import { useSocketStore } from '@/hooks/useSocketStore';
 import SprintMeter from '@/components/UI/SprintMeter';
 import CameraZoomIndicator from '@/components/UI/CameraZoomIndicator';
+import TouchControls from '@/components/UI/TouchControls';
 
 const GameCanvas = dynamic(() => import('@/components/Game/GameCanvas'), {
     ssr: false,
@@ -41,17 +42,17 @@ export default function GamePage() {
     const params = Object.fromEntries(searchParams.entries());
     const { server } = params
 
-    const { controllerState, setControllerState } = useControllerStore()
-    const [showControllerState, setShowControllerState] = useState(false)
+    // const { controllerState, setControllerState } = useControllerStore()
+    // const [showControllerState, setShowControllerState] = useState(false)
 
     // const [ cameraMode, setCameraMode ] = useState('Player')
 
-    const [players, setPlayers] = useState([])
+    // const [players, setPlayers] = useState([])
 
     useEffect(() => {
 
         if (server && socket.connected) {
-            socket.emit('join-room', `game:cannon-room-${server}`, {
+            socket.emit('join-room', `game:trash-chute-room-${server}`, {
                 game_id: server,
                 nickname: JSON.parse(localStorage.getItem('game:nickname')),
                 client_version: '1',
@@ -60,18 +61,18 @@ export default function GamePage() {
         }
 
         // return function cleanup() {
-        //     socket.emit('leave-room', 'game:glass-ceiling-landing')
+        //     socket.emit('leave-room', 'game:trash-chute-room-${server}')
         // };
 
     }, [server, socket.connected]);
 
     const [showMenu, setShowMenu] = useState(false)
 
-    const [touchControlsEnabled, setTouchControlsEnabled] = useLocalStorageNew("game:touchControlsEnabled", false)
+    // const [touchControlsEnabled, setTouchControlsEnabled] = useLocalStorageNew("game:touchControlsEnabled", false)
 
     const [sceneKey, setSceneKey] = useState(0);
 
-    const [gameState, setGameState] = useState(false)
+    // const [gameState, setGameState] = useState(false)
 
     // Function to handle scene reload
     const reloadScene = () => {
@@ -159,6 +160,8 @@ export default function GamePage() {
                 />
 
                 <SprintMeter />
+
+                <TouchControls />
 
                 <CameraZoomIndicator />
 

@@ -21,9 +21,13 @@ import Wall from "./Wall";
 import { ModelSkybox } from "../Models/Forest_clearing_1_top_skybox";
 import { useStore } from "@/hooks/useStore";
 
-function GameCanvas(props) {
+function GameCanvas({
+    landingAnimation
+}) {
 
     const debug = useStore(state => state.debug);
+    const darkMode = useStore(state => state.darkMode);
+    const graphicsQuality = useStore(state => state.graphicsQuality);
 
     const {
         // debug,
@@ -42,7 +46,8 @@ function GameCanvas(props) {
                 scale={300}
             />
 
-            {controlType == "Mouse and Keyboard" &&
+            {/* {controlType == "Mouse and Keyboard" && */}
+            {!landingAnimation &&
                 <Player />
             }
 
@@ -129,22 +134,23 @@ function GameCanvas(props) {
             }}
             id="game-canvas"
             shadows
+            key={graphicsQuality}
         >
 
-            {controlType !== "Mouse and Keyboard" &&
+            {/* {controlType !== "Mouse and Keyboard" &&
                 <OrbitControls
                 // autoRotate={gameState?.status == 'In Lobby'}
                 />
-            }
+            } */}
 
             <Sky
                 sunPosition={[0, 10, 0]}
             />
 
-            <ambientLight intensity={2} />
+            <ambientLight intensity={darkMode ? 1 : 3} />
             {/* <spotLight intensity={30000} position={[-50, 100, 50]} angle={5} penumbra={1} /> */}
 
-            {controlType == "Mouse and Keyboard" &&
+            {(!landingAnimation && controlType == "Mouse and Keyboard") &&
                 <FPV
                 // location={location}
                 // setLocation={setLocation}
@@ -157,6 +163,8 @@ function GameCanvas(props) {
                 {physicsContent}
 
             </Physics>
+
+            {landingAnimation && <LandingCamera />}
 
         </Canvas>
     )
@@ -180,4 +188,21 @@ function Ground({ args, position }) {
         </mesh>
     )
 
+}
+
+const TARGET = [0, 1, 0];
+const CAM_Y = 1;
+const CAM_Z = -14;
+const SWING_RANGE = 3;   // units left/right from center
+const SWING_SPEED = 0.3; // radians per second
+
+function LandingCamera() {
+    const { camera } = useThree();
+    useFrame(({ clock }) => {
+        camera.position.x = Math.sin(clock.elapsedTime * SWING_SPEED) * SWING_RANGE;
+        camera.position.y = CAM_Y;
+        camera.position.z = CAM_Z;
+        camera.lookAt(...TARGET);
+    });
+    return null;
 }

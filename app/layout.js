@@ -7,8 +7,12 @@ import theme from '@/theme';
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
-// import "./globals.css";
 import "@/styles/index.scss";
+
+import "@articles-media/articles-dev-box/dist/style.css";
+
+import "@articles-media/articles-gamepad-helper/dist/articles-gamepad-helper.css";
+
 import SocketLogicHandler from "@/components/SocketLogicHandler";
 import GlobalClientModals from '@/components/UI/GlobalClientModals';
 import { Suspense } from 'react';
@@ -34,11 +38,6 @@ export default function RootLayout({ children }) {
     <html lang="en">
 
       <head>
-
-        <link
-          rel="stylesheet"
-          href={`${process.env.NEXT_PUBLIC_CDN}fonts/fontawsome/css/all.min.css`}
-        />
 
       </head>
 

@@ -103,7 +103,7 @@
     }
 
     .touch-controls-area {
-        position: fixed;
+        position: absolute;
         bottom: 50px;
         left: 0;
         width: 100%;
@@ -111,10 +111,41 @@
         z-index: 1;
         background-color: rgba(0, 0, 0, 0.5);
 
-        padding: 1rem 1rem;
+        padding: 0;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+
+        .touch-zone {
+            flex: 1;
+            height: 100%;
+            position: relative;
+        }
+
+        .touch-zone-jump {
+            flex: 0 0 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-right: 0.75rem;
+        }
+
+        .touch-jump-button {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            touch-action: none;
+            pointer-events: all;
+
+            &:active {
+                background-color: rgba(255, 255, 255, 0.35);
+            }
+        }
 
         // @include media-breakpoint-up(lg) {
         //     display: none;

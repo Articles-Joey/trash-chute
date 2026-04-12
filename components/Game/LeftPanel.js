@@ -12,6 +12,7 @@ import { Dropdown, DropdownButton } from "react-bootstrap";
 // import useFullscreen from "@/hooks/useFullScreen";
 import useFullscreen from '@articles-media/articles-dev-box/useFullscreen';
 import { useStore } from "@/hooks/useStore";
+import { Debug } from "@react-three/cannon";
 
 function LeftPanelContent(props) {
 
@@ -33,8 +34,12 @@ function LeftPanelContent(props) {
     const toggleDarkMode = useStore(state => state.toggleDarkMode);
     const darkMode = useStore(state => state.darkMode);
     const setShowSettingsModal = useStore(state => state.setShowSettingsModal);
+
     const debug = useStore(state => state.debug);
     const setDebug = useStore(state => state.setDebug);
+
+    const sidebar = useStore(state => state.sidebar);
+    const toggleSidebar = useStore(state => state.toggleSidebar);
 
     const {
         // debug,
@@ -51,7 +56,7 @@ function LeftPanelContent(props) {
     }));
 
     return (
-        <div className='w-100'>
+        <div className={`left-panel w-100 ${!sidebar ? 'collapsed' : ''}`}>
 
             <div className="card card-articles card-sm">
 
@@ -121,7 +126,7 @@ function LeftPanelContent(props) {
                         Reload Game
                     </ArticlesButton>
 
-                    <div className='w-50'>
+                    {/* <div className='w-50'>
                         <DropdownButton
                             variant="articles w-100"
                             size='sm'
@@ -157,7 +162,19 @@ function LeftPanelContent(props) {
                             </div>
 
                         </DropdownButton>
-                    </div>
+                    </div> */}
+
+                    <ArticlesButton
+                        small
+                        className="w-50"
+                        active={sidebar}
+                        onClick={() => {
+                            toggleSidebar()
+                        }}
+                    >
+                        <i className='fad fa-expand'></i>
+                        <span>Sidebar</span>
+                    </ArticlesButton>
 
                     <ArticlesButton
                         size="sm"
@@ -182,6 +199,10 @@ function LeftPanelContent(props) {
                         Reset Checkpoints
                     </button>
 
+                    {debug &&
+                        <DebugPanel />
+                    }
+
                 </div>
 
             </div>
@@ -192,3 +213,34 @@ function LeftPanelContent(props) {
 }
 
 export default memo(LeftPanelContent)
+
+function DebugPanel() {
+
+    const obstacles = useGameStore(state => state.obstacles);
+    const freezeObstacles = useGameStore(state => state.freezeObstacles);
+    const setFreezeObstacles = useGameStore(state => state.setFreezeObstacles);
+
+    return (
+        <div className="debug-panel mt-3 p-2 border w-100">
+
+
+            <h5>Debug Panel</h5>
+
+            <div className="w-100">
+                {[false, true].map(value =>
+
+                    <ArticlesButton
+                        key={value}
+                        small
+                        className="w-50"
+                        active={freezeObstacles === value}
+                        onClick={() => setFreezeObstacles(value)}
+                    >
+                        {value ? 'Freeze' : 'Unfreeze'}
+                    </ArticlesButton>
+                )}
+            </div>
+
+        </div>
+    )
+}

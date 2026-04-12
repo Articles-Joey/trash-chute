@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, memo, useMemo, forwardRef, useImperativeHa
 import { Vector3, Color, MeshStandardMaterial, SphereGeometry } from "three"
 import { useKeyboard } from "@/hooks/useKeyboard"
 import { useGameStore } from "@/hooks/useGameStore"
+import { useControlsStore } from "@/hooks/useControlsStore"
 import { Model as SpacesuitModel } from "@/components/Models/Spacesuit"
 
 const JUMP_FORCE = 6;
@@ -48,9 +49,9 @@ function PlayerBase() {
     const explosionRef = useRef(null)
 
     // Sprint state
-    const SPRINT_MAX = 3       // seconds of sprint energy
+    const SPRINT_MAX = 1.5       // seconds of sprint energy
     const SPRINT_COOLDOWN = 5  // seconds before refill starts
-    const SPRINT_REFILL = 1.5  // energy per second (fills in 2s)
+    const SPRINT_REFILL = 1  // energy per second (fills in 2s)
     const sprintEnergyRef = useRef(SPRINT_MAX)
     const lastSprintActiveRef = useRef(0)  // timestamp of last active sprint frame
 
@@ -90,6 +91,8 @@ function PlayerBase() {
     }))
 
     useEffect(() => {
+        // YXZ order = yaw first (world Y), then pitch (local X) — prevents gimbal tilt
+        camera.rotation.order = 'YXZ';
         setPlayer(ref, api);
         const unsubscribe = api.position.subscribe((p) => {
             setPosition([...p]);
@@ -181,17 +184,20 @@ function PlayerBase() {
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
         const gamepad = gamepads[0];
 
-        let forwardInput = (moveBackward ? 1 : 0) - (moveForward ? 1 : 0);
-        let sideInput = (moveLeft ? 1 : 0) - (moveRight ? 1 : 0);
+        const tc = useControlsStore.getState().touchControls;
+
+        let forwardInput = ((moveBackward || tc.backward) ? 1 : 0) - ((moveForward || tc.forward) ? 1 : 0);
+        let sideInput = ((moveLeft || tc.left) ? 1 : 0) - ((moveRight || tc.right) ? 1 : 0);
         let rotationX = 0;
         let rotationY = 0;
 
-        if (moveForward && !wasMovingForward.current) {
+        const isForward = moveForward || tc.forward;
+        if (isForward && !wasMovingForward.current) {
             if (Date.now() - lastForwardPressTime.current < 300) isDoubleTapSprinting.current = true;
             lastForwardPressTime.current = Date.now();
         }
-        if (!moveForward) isDoubleTapSprinting.current = false;
-        wasMovingForward.current = moveForward;
+        if (!isForward) isDoubleTapSprinting.current = false;
+        wasMovingForward.current = isForward;
 
         if (gamepad) {
             const axisX = gamepad.axes[0];
@@ -204,9 +210,15 @@ function PlayerBase() {
             if (Math.abs(lookY) > CONTROLLER_DEADZONE) rotationX = -lookY * LOOK_SENSITIVITY;
         }
 
+        // Touch look contribution (continuous per-frame, rate = 2 rad/sec at full deflection)
+        const TOUCH_LOOK_SENSITIVITY = 2.0;
+        if (tc.lookX) rotationY += -tc.lookX * TOUCH_LOOK_SENSITIVITY * delta;
+        if (tc.lookY) rotationX += tc.lookY * TOUCH_LOOK_SENSITIVITY * delta;
+
         if (rotationX !== 0 || rotationY !== 0) {
             camera.rotation.y += rotationY;
             camera.rotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, camera.rotation.x + rotationX));
+            camera.rotation.z = 0; // prevent roll drift
         }
 
         const isSprintingInput = shift || isDoubleTapSprinting.current;
@@ -264,12 +276,14 @@ function PlayerBase() {
         }
 
         // Jump
-        const isJumpingInput = jump || (gamepad?.buttons[0]?.pressed);
+        const isJumpingInput = jump || tc.jump || (gamepad?.buttons[0]?.pressed);
         if (isJumpingInput && groundedFrames.current > 2 && !isJumping) {
             api.velocity.set(vel.current[0], JUMP_FORCE, vel.current[2]);
             setIsJumping(true);
             lastJumpTime.current = Date.now();
             groundedFrames.current = 0;
+            // Consume touch jump so it doesn't re-fire on landing while still held
+            if (tc.jump) useControlsStore.getState().setTouchControls({ jump: false });
         }
 
         // Update model rotation based on movement direction

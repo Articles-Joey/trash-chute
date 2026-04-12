@@ -17,6 +17,8 @@ const LOW_MODEL = 'models/forest_clearing_1_top_skybox-4k-transformed.glb'
 
 export function ModelSkybox(props) {
 
+  const darkMode = useStore(state => state.darkMode);
+
   const graphicsQuality = useStore(state => state.graphicsQuality);
   const modelPath = graphicsQuality === 'High' ? HIGH_MODEL : LOW_MODEL;
 
@@ -24,7 +26,12 @@ export function ModelSkybox(props) {
 
   return (
     <group {...props} dispose={null}>
-      <mesh geometry={nodes.Sphere_Skybox_0.geometry} material={materials.Skybox} rotation={[-Math.PI / 2, 0, 0]} />
+      <mesh
+        geometry={nodes.Sphere_Skybox_0.geometry}
+        material={materials.Skybox}
+        material-color={darkMode ? '#757575' : '#ffffff'}
+        rotation={[-Math.PI / 2, 0, 0]}
+      />
     </group>
   )
 }

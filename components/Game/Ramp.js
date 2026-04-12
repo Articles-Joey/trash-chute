@@ -5,6 +5,8 @@ import { useStore } from "@/hooks/useStore";
 
 export default function Ramp({ args, position, rotation }) {
 
+    const darkMode = useStore(state => state.darkMode);
+
     const graphicsQuality = useStore(state => state.graphicsQuality);
 
     const [ref] = useBox(() => ({

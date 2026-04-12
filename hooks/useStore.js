@@ -2,8 +2,6 @@ import { generateRandomTrashNickname } from '@/util/generateRandomTrashNickname'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-const assets_src = 'games/Ocean Rings/'
-
 export const useStore = create()(
   persist(
     (set, get) => ({
@@ -15,7 +13,7 @@ export const useStore = create()(
         });
       },
 
-      nickname: null,
+      nickname: generateRandomTrashNickname(),
       setNickname: (newValue) => {
         set((prev) => ({
           nickname: newValue
@@ -30,20 +28,21 @@ export const useStore = create()(
         }))
       },
 
-      character: {
-        model: 'Clownfish',
-        color: '#d87e07'
-      },
-      setCharacter: (newValue) => {
-        set((prev) => ({
-          character: newValue
-        }))
-      },
-      characters: [
+      // character: {
+      //   model: 'Clownfish',
+      //   color: '#d87e07'
+      // },
+      // setCharacter: (newValue) => {
+      //   set((prev) => ({
+      //     character: newValue
+      //   }))
+      // },
+      // characters: [
 
-      ],
+      // ],
 
       darkMode: null,
+      toggleDarkMode: () => set({ darkMode: !get().darkMode }),
       setDarkMode: (newValue) => {
         set((prev) => ({
           darkMode: newValue
@@ -55,9 +54,6 @@ export const useStore = create()(
 
       threeDimensional: true, // 'Light' | 'Dark' | null
       setThreeDimensional: (threeDimensional) => set({ threeDimensional }),
-
-      darkMode: true,
-      toggleDarkMode: () => set({ darkMode: !get().darkMode }),
 
       showMenu: false,
       setShowMenu: (value) => set({ showMenu: value }),

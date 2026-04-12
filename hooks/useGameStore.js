@@ -35,6 +35,13 @@ export const useGameStore = create()(
                 }))
             },
 
+            freezeObstacles: false,
+            setFreezeObstacles: (newValue) => {
+                set((prev) => ({
+                    freezeObstacles: newValue
+                }))
+            },
+
             // galleryTheme: "Forest",
             // setGalleryTheme: (newValue) => {
             //     set((prev) => ({
