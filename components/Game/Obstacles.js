@@ -74,7 +74,7 @@ function Obstacles() {
 
     return (
         <group>
-            {obstacles.map((obstacle) => {
+            {obstacles.length > 0 && obstacles.map((obstacle) => {
                 const type = OBSTACLE_TYPES[obstacle.typeIndex];
                 const ObstacleComponent =
                     type.collision === 'box' ? ObstacleBox :
