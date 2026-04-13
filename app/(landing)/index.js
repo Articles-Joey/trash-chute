@@ -236,14 +236,14 @@ export default function LobbyPage() {
                             </Link>
 
                             <div className="fw-bold mb-1 small text-center">
-                                {lobbyDetails.players.length || 0} player{lobbyDetails.players.length > 1 && 's'} in the lobby.
+                                {lobbyDetails?.players?.length || 0} player{lobbyDetails?.players?.length > 1 && 's'} in the lobby.
                             </div>
 
-                            <div className="servers">
+                            {/* <div className="servers">
 
                                 {[1, 2, 3, 4].map(id => {
 
-                                    let lobbyLookup = lobbyDetails?.fourFrogsGlobalState?.games?.find(lobby =>
+                                    let lobbyLookup = lobbyDetails?.games?.find(lobby =>
                                         parseInt(lobby.server_id) == id
                                     )
 
@@ -300,7 +300,7 @@ export default function LobbyPage() {
                                     )
                                 })}
 
-                            </div>
+                            </div> */}
 
                         </div>
 
