@@ -13,10 +13,10 @@ import { useStore } from '@/hooks/useStore';
 import useUserDetails from '@articles-media/articles-dev-box/useUserDetails';
 import useUserToken from '@articles-media/articles-dev-box/useUserToken';
 
-const GameScoreboard = dynamic(() =>
-    import('@articles-media/articles-dev-box/GameScoreboard'),
-    { ssr: false }
-);
+// const GameScoreboard = dynamic(() =>
+//     import('@articles-media/articles-dev-box/GameScoreboard'),
+//     { ssr: false }
+// );
 const Ad = dynamic(() =>
     import('@articles-media/articles-dev-box/Ad'),
     { ssr: false }
@@ -26,6 +26,9 @@ const ReturnToLauncherButton = dynamic(() =>
     import('@articles-media/articles-dev-box/ReturnToLauncherButton'),
     { ssr: false }
 );
+
+import NicknameInput from '@articles-media/articles-dev-box/NicknameInput';
+import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
 
 const SharedBackgroundImage = () => (
     <Image
@@ -183,42 +186,10 @@ export default function LobbyPage() {
 
                         <div className='card-header d-flex align-items-center'>
 
-                            <div className="flex-grow-1">
+                            <NicknameInput 
+                                useStore={useStore}
+                            />
 
-                                <div className="form-group articles mb-0">
-                                    <label htmlFor="nickname">Nickname</label>
-                                    {/* <SingleInput
-                                        value={nickname}
-                                        setValue={setNickname}
-                                        noMargin
-                                    /> */}
-                                    <div className="d-flex align-items-center">
-                                        {true &&
-                                            <input
-                                                type="text"
-                                                value={(_hasHydrated && nickname !== null) ? nickname : ''}
-                                                disabled={!_hasHydrated}
-                                                onChange={(e) => {
-                                                    setNickname(e.target.value)
-                                                }}
-                                                className={`form-control form-control-sm`}
-                                            />
-                                        }
-                                        <ArticlesButton
-                                            small
-                                            className=""
-                                            onClick={() => {
-                                                randomNickname()
-                                            }}
-                                        >
-                                            <i className="fad fa-random"></i>
-                                        </ArticlesButton>
-                                    </div>
-                                </div>
-
-                                <div className='mt-1' style={{ fontSize: '0.8rem' }}>Visible to all players</div>
-
-                            </div>
                         </div>
 
                         <div className="card-body">
@@ -239,7 +210,7 @@ export default function LobbyPage() {
                                 {lobbyDetails?.players?.length || 0} player{lobbyDetails?.players?.length > 1 && 's'} in the lobby.
                             </div>
 
-                            {/* <div className="servers">
+                            <div className="servers">
 
                                 {[1, 2, 3, 4].map(id => {
 
@@ -300,74 +271,16 @@ export default function LobbyPage() {
                                     )
                                 })}
 
-                            </div> */}
+                            </div>
 
                         </div>
 
                         <div className="card-footer d-flex flex-wrap justify-content-center">
 
-                            <div className="d-flex w-50">
-                                <ArticlesButton
-                                    className={`w-100`}
-                                    small
-                                    onClick={() => {
-                                        setShowSettingsModal(prev => !prev)
-                                    }}
-                                >
-                                    <i className="fad fa-cog"></i>
-                                    Settings
-                                </ArticlesButton>
-                                <ArticlesButton
-                                    className={``}
-                                    small
-                                    onClick={() => {
-                                        toggleDarkMode()
-                                    }}
-                                >
-                                    <i className="fad fa-moon"></i>
-                                    {/* Dark Mode */}
-                                </ArticlesButton>
-                            </div>
-
-                            <ArticlesButton
-                                className={`w-50`}
-                                small
-                                onClick={() => {
-                                    setShowInfoModal(true)
-                                }}
-                            >
-                                <i className="fad fa-info-square"></i>
-                                Info
-                            </ArticlesButton>
-
-                            <Link
-                                href={'https://github.com/Articles-Joey/trash-chute'} // Replace with your GitHub repository URL
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-50"
-                            >
-                                <ArticlesButton
-                                    className={`w-100`}
-                                    small
-                                    onClick={() => {
-
-                                    }}
-                                >
-                                    <i className="fab fa-github"></i>
-                                    GitHub
-                                </ArticlesButton>
-                            </Link>
-
-                            <ArticlesButton
-                                className={`w-50`}
-                                small
-                                onClick={() => {
-                                    setShowCreditsModal(true)
-                                }}
-                            >
-                                <i className="fad fa-users"></i>
-                                Credits
-                            </ArticlesButton>
+                            <GameMenuPrimaryButtonGroup 
+                                useStore={useStore}
+                                type="Landing"
+                            />    
 
                         </div>
 
@@ -377,11 +290,11 @@ export default function LobbyPage() {
 
                 </div>
 
-                <GameScoreboard
+                {/* <GameScoreboard
                     game={game_name}
                     style="Default"
                     darkMode={darkMode ? true : false}
-                />
+                /> */}
 
                 <Ad
                     style="Default"
