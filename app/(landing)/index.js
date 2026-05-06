@@ -13,10 +13,10 @@ import { useStore } from '@/hooks/useStore';
 import useUserDetails from '@articles-media/articles-dev-box/useUserDetails';
 import useUserToken from '@articles-media/articles-dev-box/useUserToken';
 
-// const GameScoreboard = dynamic(() =>
-//     import('@articles-media/articles-dev-box/GameScoreboard'),
-//     { ssr: false }
-// );
+const GameScoreboard = dynamic(() =>
+    import('@articles-media/articles-dev-box/GameScoreboard'),
+    { ssr: false }
+);
 const Ad = dynamic(() =>
     import('@articles-media/articles-dev-box/Ad'),
     { ssr: false }
@@ -26,6 +26,8 @@ const ReturnToLauncherButton = dynamic(() =>
     import('@articles-media/articles-dev-box/ReturnToLauncherButton'),
     { ssr: false }
 );
+
+import SessionButton from '@articles-media/articles-dev-box/SessionButton';
 
 import NicknameInput from '@articles-media/articles-dev-box/NicknameInput';
 import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
@@ -45,9 +47,6 @@ const LandingBackgroundAnimation = dynamic(() => import('@/components/Game/Landi
     loading: () => <SharedBackgroundImage />
 });
 
-const game_key = 'trash-chute'
-const game_name = 'Trash Chute'
-
 export default function LobbyPage() {
 
     const {
@@ -62,7 +61,7 @@ export default function LobbyPage() {
         isLoading: userTokenLoading,
         mutate: userTokenMutate
     } = useUserToken(
-        "3029"
+        process.env.NEXT_PUBLIC_GAME_PORT
     );
 
     const {
@@ -74,42 +73,17 @@ export default function LobbyPage() {
         token: userToken
     });
 
-    // const userReduxState = useSelector((state) => state.auth.user_details)
-    const userReduxState = false
-
-    // const [nickname, setNickname] = useLocalStorageNew("game:nickname", userReduxState.display_name)
-
-    const _hasHydrated = useStore((state) => state._hasHydrated)
-
     const landingAnimation = useStore((state) => state.landingAnimation)
 
-    const nickname = useStore((state) => state.nickname)
-    const setNickname = useStore((state) => state.setNickname)
-    const randomNickname = useStore((state) => state.randomNickname)
-
     const darkMode = useStore((state) => state.darkMode)
-    const toggleDarkMode = useStore((state) => state.toggleDarkMode)
-
-    const setShowInfoModal = useStore((state) => state.setShowInfoModal)
-    const setShowSettingsModal = useStore((state) => state.setShowSettingsModal)
-    const setShowCreditsModal = useStore((state) => state.setShowCreditsModal)
 
     const lobbyDetails = useStore((state) => state.lobbyDetails)
     const setLobbyDetails = useStore((state) => state.setLobbyDetails)
 
-    // const [showInfoModal, setShowInfoModal] = useState(false)
-    // const [showSettingsModal, setShowSettingsModal] = useState(false)
-    // const [showPrivateGameModal, setShowPrivateGameModal] = useState(false)
-
-    // const [lobbyDetails, setLobbyDetails] = useState({
-    //     players: [],
-    //     games: [],
-    // })
-
     useEffect(() => {
 
-        socket.on('game:death-race-landing-details', function (msg) {
-            console.log('game:death-race-landing-details', msg)
+        socket.on('landing-details', function (msg) {
+            console.log('landing-details', msg)
 
             if (JSON.stringify(msg) !== JSON.stringify(lobbyDetails)) {
                 setLobbyDetails(msg)
@@ -117,36 +91,26 @@ export default function LobbyPage() {
         });
 
         return () => {
-            socket.off('game:death-race-landing-details');
+            socket.off('landing-details');
         };
 
     }, [])
 
-    // Rather all in one logic in store with initial value flash then scattered logic
-    // useEffect(() => {
-
-    //     // Only on first load
-    //     if (nickname === null && _hasHydrated) {
-    //         randomNickname()
-    //     }
-
-    // }, [nickname, _hasHydrated])
-
     useEffect(() => {
 
         if (socket.connected) {
-            socket.emit('join-room', 'game:death-race-landing');
+            socket.emit('join-room', 'landing');
         }
 
         return function cleanup() {
-            socket.emit('leave-room', 'game:death-race-landing')
+            socket.emit('leave-room', 'landing')
         };
 
     }, [socket.connected]);
 
     return (
 
-        <div className={`${game_key}-landing-page`}>
+        <div className={`${process.env.NEXT_PUBLIC_GAME_KEY}-landing-page`}>
 
             {/* <div className='background-wrap'>
                 <Image
@@ -198,7 +162,7 @@ export default function LobbyPage() {
                                 pathname: `/play`
                             }}>
                                 <ArticlesButton
-                                    className={`w-100 mb-3`}
+                                    className={`w-100`}
                                     small
                                 >
                                     <i className="fas fa-play"></i>
@@ -206,70 +170,78 @@ export default function LobbyPage() {
                                 </ArticlesButton>
                             </Link>
 
-                            <div className="fw-bold mb-1 small text-center">
-                                {lobbyDetails?.players?.length || 0} player{lobbyDetails?.players?.length > 1 && 's'} in the lobby.
+                            <div className="small text-center mt-2">
+                                Multiplayer coming soon!
                             </div>
 
-                            <div className="servers">
+                            <div className="d-none mt-3">
 
-                                {[1, 2, 3, 4].map(id => {
-
-                                    let lobbyLookup = lobbyDetails?.games?.find(lobby =>
-                                        parseInt(lobby.server_id) == id
-                                    )
-
-                                    return (
-                                        <div key={id} className="server">
-
-                                            <div className='d-flex justify-content-between align-items-center w-100 mb-2'>
-                                                <div className="mb-0" style={{ fontSize: '0.9rem' }}><b>Server {id}</b></div>
-                                                <div className='mb-0'>{lobbyLookup?.players?.length || 0}/4</div>
-                                            </div>
-
-                                            <div className='d-flex justify-content-around w-100 mb-1'>
-                                                {[1, 2, 3, 4].map(player_count => {
-
-                                                    let playerLookup = false
-
-                                                    if (lobbyLookup?.players?.length >= player_count) playerLookup = true
-
-                                                    return (
-                                                        <div key={player_count} className="icon" style={{
-                                                            width: '20px',
-                                                            height: '20px',
-                                                            ...(playerLookup ? {
-                                                                backgroundColor: 'black',
-                                                            } : {
-                                                                backgroundColor: 'gray',
-                                                            }),
-                                                            border: '1px solid black'
-                                                        }}>
-
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-
-                                            <Link
-                                                className={``}
-                                                href={{
-                                                    pathname: `/play`,
-                                                    query: {
-                                                        server: id
-                                                    }
-                                                }}
-                                            >
-                                                <ArticlesButton
-                                                    className="px-5"
-                                                    small
+                                <div className="fw-bold mb-1 small text-center">
+                                    {lobbyDetails?.players?.length || 0} player{lobbyDetails?.players?.length > 1 && 's'} in the lobby.
+                                </div>
+    
+                                <div className="servers">
+    
+                                    {[1, 2].map(id => {
+    
+                                        let lobbyLookup = lobbyDetails?.games?.find(lobby =>
+                                            parseInt(lobby.server_id) == id
+                                        )
+    
+                                        return (
+                                            <div key={id} className="server">
+    
+                                                <div className='d-flex justify-content-between align-items-center w-100 mb-2'>
+                                                    <div className="mb-0" style={{ fontSize: '0.9rem' }}><b>Server {id}</b></div>
+                                                    <div className='mb-0'>{lobbyLookup?.players?.length || 0}/4</div>
+                                                </div>
+    
+                                                <div className='d-flex justify-content-around w-100 mb-1'>
+                                                    {[1, 2, 3, 4].map(player_count => {
+    
+                                                        let playerLookup = false
+    
+                                                        if (lobbyLookup?.players?.length >= player_count) playerLookup = true
+    
+                                                        return (
+                                                            <div key={player_count} className="icon" style={{
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                ...(playerLookup ? {
+                                                                    backgroundColor: 'black',
+                                                                } : {
+                                                                    backgroundColor: 'gray',
+                                                                }),
+                                                                border: '1px solid black'
+                                                            }}>
+    
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+    
+                                                <Link
+                                                    className={``}
+                                                    href={{
+                                                        pathname: `/play`,
+                                                        query: {
+                                                            server: id
+                                                        }
+                                                    }}
                                                 >
-                                                    Join
-                                                </ArticlesButton>
-                                            </Link>
-
-                                        </div>
-                                    )
-                                })}
+                                                    <ArticlesButton
+                                                        className="px-5"
+                                                        small
+                                                    >
+                                                        Join
+                                                    </ArticlesButton>
+                                                </Link>
+    
+                                            </div>
+                                        )
+                                    })}
+    
+                                </div>
 
                             </div>
 
@@ -286,20 +258,40 @@ export default function LobbyPage() {
 
                     </div>
 
+                    <SessionButton
+                        port={process.env.NEXT_PUBLIC_GAME_PORT}
+                        friendsButton={true}
+                    />
+
                     <ReturnToLauncherButton />
 
                 </div>
 
-                {/* <GameScoreboard
-                    game={game_name}
+                <GameScoreboard
+                    game={process.env.NEXT_PUBLIC_GAME_NAME}
                     style="Default"
                     darkMode={darkMode ? true : false}
-                /> */}
+                    prepend={
+                        <>
+                            {/* <div
+                                style={{
+                                    width: '100%',
+                                    height: '200px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <RotatingMascot />
+                            </div> */}
+                        </>
+                    }
+                />
 
                 <Ad
                     style="Default"
                     section={"Games"}
-                    section_id={game_name}
+                    section_id={process.env.NEXT_PUBLIC_GAME_NAME}
                     darkMode={darkMode ? true : false}
                     user_ad_token={userToken}
                     userDetails={userDetails}

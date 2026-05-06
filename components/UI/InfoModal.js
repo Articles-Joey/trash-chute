@@ -1,20 +1,11 @@
 import { useEffect, useState } from "react";
 
-import Image from "next/image";
-import dynamic from 'next/dynamic'
-
-// import { useSelector } from 'react-redux'
-
 import { Modal } from "react-bootstrap"
-
-import ViewUserModal from "@/components/UI/ViewUserModal"
 
 import packageJson from "@/package.json"
 
-const games = []
-
-import IsDev from "@/components/UI/IsDev";
 import ArticlesButton from "./Button";
+import { useStore } from "@/hooks/useStore";
 
 export default function GameInfoModal({
     show,
@@ -23,20 +14,10 @@ export default function GameInfoModal({
 }) {
 
     const [showModal, setShowModal] = useState(true)
+    const darkMode = useStore((state) => state.darkMode)
 
     return (
         <>
-            {/* {lightboxData && (
-                <Lightbox
-                    mainSrc={lightboxData?.location}
-                    onCloseRequest={() => setLightboxData(null)}
-                    reactModalStyle={{
-                        overlay: {
-                            zIndex: '2000'
-                        }
-                    }}
-                />
-            )} */}
 
             <Modal
                 className="articles-modal games-info-modal"
@@ -57,6 +38,14 @@ export default function GameInfoModal({
                 </Modal.Header>
 
                 <Modal.Body className="flex-column p-0">
+
+                    <div className="ratio ratio-16x9">
+                        {darkMode ?
+                            <img src={"img/game-preview.webp"}></img>
+                            :
+                            <img src={"img/game-preview.webp"}></img>
+                        }
+                    </div>
 
                     <div className="p-3">
                         {packageJson.description}

@@ -1,7 +1,7 @@
 import { createContext, createRef, forwardRef, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Sky, useDetectGPU, useTexture, OrbitControls, Cylinder, QuadraticBezierLine, Text } from "@react-three/drei";
+import { Sky, useDetectGPU, useTexture, OrbitControls, Cylinder, QuadraticBezierLine, Text, Stats } from "@react-three/drei";
 
 import { NearestFilter, RepeatWrapping, TextureLoader, Vector3 } from "three";
 
@@ -28,6 +28,7 @@ function GameCanvas({
     const debug = useStore(state => state.debug);
     const darkMode = useStore(state => state.darkMode);
     const graphicsQuality = useStore(state => state.graphicsQuality);
+    const showStats = useStore((state) => state?.debugConfig?.showStats);
 
     const {
         // debug,
@@ -136,6 +137,10 @@ function GameCanvas({
             shadows
             key={graphicsQuality}
         >
+
+            {showStats && <>
+                <Stats className="stats-overlay" />
+            </>}
 
             {/* {controlType !== "Mouse and Keyboard" &&
                 <OrbitControls

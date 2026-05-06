@@ -14,6 +14,7 @@ import ArticlesButton from '@/components/UI/Button';
 
 // import useFullscreen from '@/hooks/useFullScreen';
 import useFullscreen from '@articles-media/articles-dev-box/useFullscreen';
+import GameMenu from '@articles-media/articles-dev-box/GameMenu';
 
 import { useControllerStore } from '@/hooks/useControllerStore';
 
@@ -23,6 +24,8 @@ import { useSocketStore } from '@/hooks/useSocketStore';
 import SprintMeter from '@/components/UI/SprintMeter';
 import CameraZoomIndicator from '@/components/UI/CameraZoomIndicator';
 import TouchControls from '@/components/UI/TouchControls';
+import { useStore } from '@/hooks/useStore';
+import classNames from 'classnames';
 
 const GameCanvas = dynamic(() => import('@/components/Game/GameCanvas'), {
     ssr: false,
@@ -42,13 +45,6 @@ export default function GamePage() {
     const params = Object.fromEntries(searchParams.entries());
     const { server } = params
 
-    // const { controllerState, setControllerState } = useControllerStore()
-    // const [showControllerState, setShowControllerState] = useState(false)
-
-    // const [ cameraMode, setCameraMode ] = useState('Player')
-
-    // const [players, setPlayers] = useState([])
-
     useEffect(() => {
 
         if (server && socket.connected) {
@@ -66,92 +62,35 @@ export default function GamePage() {
 
     }, [server, socket.connected]);
 
-    const [showMenu, setShowMenu] = useState(false)
-
-    // const [touchControlsEnabled, setTouchControlsEnabled] = useLocalStorageNew("game:touchControlsEnabled", false)
-
-    const [sceneKey, setSceneKey] = useState(0);
-
-    // const [gameState, setGameState] = useState(false)
-
-    // Function to handle scene reload
-    const reloadScene = () => {
-        setSceneKey((prevKey) => prevKey + 1);
-    };
-
-    const { isFullscreen, requestFullscreen, exitFullscreen } = useFullscreen();
-
-    let panelProps = {
-        // server,
-        // players,
-        // touchControlsEnabled,
-        // setTouchControlsEnabled,
-        reloadScene,
-        // controllerState,
-        // isFullscreen,
-        // requestFullscreen,
-        // exitFullscreen,
-        // setShowMenu
-    }
-
-    const game_name = 'Trash Chute'
-    const game_key = 'trash-chute'
+    const sceneKey = useStore((state) => state.sceneKey)
+    const menuOpen = useStore((state) => state.menuOpen)
+    const sidebar = useStore((state) => state.sidebar)
 
     return (
 
         <div
-            className={`${game_key}-game-page ${isFullscreen && 'fullscreen'}`}
-            id={`${game_key}-game-page`}
+            className={classNames(
+                `${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`,
+                {
+                    'menu-open': menuOpen,
+                    'fullscreen': useFullscreen().isFullscreen,
+                    'show-sidebar': sidebar,
+                }
+            )}
+            id={`${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`}
         >
 
-            <div className="menu-bar card card-articles p-1 justify-content-center">
-
-                <div className='flex-header align-items-center'>
-
-                    <ArticlesButton
-                        small
-                        active={showMenu}
-                        onClick={() => {
-                            setShowMenu(prev => !prev)
-                        }}
-                    >
-                        <i className="fad fa-bars"></i>
-                        <span>Menu</span>
-                    </ArticlesButton>
-
-                    <div>
-                        {/* Y: {(playerLocation?.y || 0)} */}
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div className={`mobile-menu ${showMenu && 'show'}`}>
-                <LeftPanelContent
-                    {...panelProps}
-                />
-            </div>
-
-            {/* <TouchControls
-                touchControlsEnabled={touchControlsEnabled}
-            /> */}
-
-            <div className='panel-left card rounded-0 d-none d-lg-flex'>
-                <LeftPanelContent
-                    {...panelProps}
-                />
-            </div>
-
-            {/* <div className='game-info'>
-                <div className="card card-articles card-sm">
-                    <div className="card-body">
-                        <pre> 
-                            {JSON.stringify(playerData, undefined, 2)}
-                        </pre>
-                    </div>
-                </div>
-            </div> */}
+            <GameMenu
+                useStore={useStore}
+                LeftPanelContent={LeftPanelContent}
+                menuBarConfig={{
+                    style: "Corner Button",
+                    menuBarButtonPosition: "Left"
+                }}
+                sidebarConfig={{
+                    style: "Static Panel",
+                }}
+            />
 
             <div className='canvas-wrap'>
 

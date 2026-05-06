@@ -1,17 +1,13 @@
 "use client";
 import { useAudioStore } from '@/hooks/useAudioStore';
 import { useStore } from '@/hooks/useStore';
+import useTouchControlsStore from '@/hooks/useTouchControlsStore';
 import dynamic from 'next/dynamic'
 
 const InfoModal = dynamic(
     () => import('@/components/UI/InfoModal'),
     { ssr: false }
 )
-
-// const SettingsModal = dynamic(
-//     () => import('@/components/UI/Settings/SettingsModal'),
-//     { ssr: false }
-// )
 
 const SettingsModal = dynamic(
     () => import('@articles-media/articles-dev-box/SettingsModal'),
@@ -22,11 +18,6 @@ const CreditsModal = dynamic(
     () => import('@articles-media/articles-dev-box/CreditsModal'),
     { ssr: false }
 )
-
-// const CreditsModal = dynamic(
-//     () => import('@/components/UI/CreditsModal'),
-//     { ssr: false }
-// )
 
 export default function GlobalClientModals() {
 
@@ -53,6 +44,7 @@ export default function GlobalClientModals() {
                     show={showSettingsModal}
                     setShow={setShowSettingsModal}
                     store={useStore}
+                    useTouchControlsStore={useTouchControlsStore}
                     useAudioStore={useAudioStore}
                     config={{
                         tabs: {
@@ -73,6 +65,7 @@ export default function GlobalClientModals() {
                                 ]
                             },
                             'Controls': {
+                                touchControls: true,
                                 defaultKeyBindings: {
                                     // moveUp: "W",
                                     // moveDown: "S",
