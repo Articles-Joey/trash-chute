@@ -31,6 +31,7 @@ import SessionButton from '@articles-media/articles-dev-box/SessionButton';
 
 import NicknameInput from '@articles-media/articles-dev-box/NicknameInput';
 import GameMenuPrimaryButtonGroup from '@articles-media/articles-dev-box/GameMenuPrimaryButtonGroup';
+import RotatingMascot from '@/components/UI/RotatingMascot';
 
 const SharedBackgroundImage = () => (
     <Image
@@ -273,7 +274,7 @@ export default function LobbyPage() {
                     darkMode={darkMode ? true : false}
                     prepend={
                         <>
-                            {/* <div
+                            <div
                                 style={{
                                     width: '100%',
                                     height: '200px',
@@ -283,7 +284,7 @@ export default function LobbyPage() {
                                 }}
                             >
                                 <RotatingMascot />
-                            </div> */}
+                            </div>
                         </>
                     }
                 />

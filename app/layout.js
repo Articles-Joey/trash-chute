@@ -29,7 +29,7 @@ import LayoutClient from './layoutClient';
 // });
 
 export const metadata = {
-  title: "Cannon Game",
+  title: process.env.NEXT_PUBLIC_GAME_NAME,
   description: "",
 };
 
