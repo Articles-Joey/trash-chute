@@ -1,14 +1,23 @@
+"use client";
+
 import { memo, useEffect, useRef } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import { useControlsStore } from "@/hooks/useControlsStore";
+import useTouchControlsStore from "@/hooks/useTouchControlsStore";
 
 function TouchControlsBase() {
     const leftZoneRef = useRef(null);
     const lookZoneRef = useRef(null);
-    const touchEnabled = useControlsStore((state) => state.touchControls.enabled);
+    const touchEnabled = useTouchControlsStore((state) => state.enabled);
     const setTouchControls = useControlsStore((state) => state.setTouchControls);
 
     useEffect(() => {
-        if (!leftZoneRef.current || !lookZoneRef.current) return;
+        setTouchControls({ enabled: touchEnabled });
+    }, [touchEnabled, setTouchControls]);
+
+    useEffect(() => {
+        if (!touchEnabled || !leftZoneRef.current || !lookZoneRef.current) return;
 
         const nipplejs = require('nipplejs');
 
@@ -56,27 +65,56 @@ function TouchControlsBase() {
         return () => {
             leftManager.destroy();
             lookManager.destroy();
+            setTouchControls({ forward: false, backward: false, left: false, right: false, jump: false, lookX: 0, lookY: 0 });
         };
-    }, [setTouchControls]);
+    }, [touchEnabled, setTouchControls]);
 
     return (
-        <div className={`touch-controls-area${!touchEnabled ? ' d-none' : ''}`}>
+        <Box
+            sx={{
+                position: "absolute",
+                bottom: 50,
+                left: 0,
+                width: "100%",
+                height: 150,
+                zIndex: 1,
+                bgcolor: "rgba(0,0,0,0.5)",
+                p: 0,
+                display: touchEnabled ? "flex" : "none",
+            }}
+        >
 
-            <div className="touch-zone touch-zone-left" ref={leftZoneRef} />
+            <Box ref={leftZoneRef} sx={{ flex: 1, height: "100%", position: "relative" }} />
 
-            <div className="touch-zone touch-zone-jump">
-                <button
-                    className="touch-jump-button"
+            <Box sx={{ flex: "0 0 90px", height: "100%", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", pr: "0.75rem" }}>
+                <Button
+                    sx={{
+                        width: 64,
+                        height: 64,
+                        minWidth: 64,
+                        borderRadius: "50%",
+                        border: "2px solid rgba(255,255,255,0.6)",
+                        bgcolor: "rgba(255,255,255,0.15)",
+                        color: "white",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                        textTransform: "none",
+                        cursor: "pointer",
+                        userSelect: "none",
+                        touchAction: "none",
+                        pointerEvents: "all",
+                        "&:active": { bgcolor: "rgba(255,255,255,0.35)" },
+                    }}
                     onTouchStart={(e) => { e.stopPropagation(); setTouchControls({ jump: true }); }}
                     onTouchEnd={(e) => { e.stopPropagation(); setTouchControls({ jump: false }); }}
                 >
                     Jump
-                </button>
-            </div>
+                </Button>
+            </Box>
 
-            <div className="touch-zone touch-zone-look" ref={lookZoneRef} />
+            <Box ref={lookZoneRef} sx={{ flex: 1, height: "100%", position: "relative" }} />
 
-        </div>
+        </Box>
     );
 }
 

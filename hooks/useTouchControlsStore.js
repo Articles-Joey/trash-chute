@@ -7,6 +7,7 @@ const useTouchControlsStore = create()(
         (set, get) => ({
 
             enabled: false,
+            toggleEnabled: () => set((state) => ({ enabled: !state.enabled })),
             setEnabled: (newValue) => {
                 set((prev) => ({
                     enabled: newValue

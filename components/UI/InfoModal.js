@@ -1,72 +1,28 @@
-import { useEffect, useState } from "react";
+"use client";
 
-import { Modal } from "react-bootstrap"
+import Box from "@mui/material/Box";
+import ArticlesModal from "./ArticlesModal";
+import packageInfo from "@/package.json";
 
-import packageJson from "@/package.json"
-
-import ArticlesButton from "./Button";
-import { useStore } from "@/hooks/useStore";
-
-export default function GameInfoModal({
-    show,
-    setShow,
-    credits
-}) {
-
-    const [showModal, setShowModal] = useState(true)
-    const darkMode = useStore((state) => state.darkMode)
-
+export default function GameInfoModal({ show, setShow }) {
     return (
-        <>
-
-            <Modal
-                className="articles-modal games-info-modal"
-                size='md'
-                show={showModal}
-                centered
-                scrollable
-                onExited={() => {
-                    setShow(false)
-                }}
-                onHide={() => {
-                    setShowModal(false)
-                }}
-            >
-
-                <Modal.Header closeButton>
-                    <Modal.Title>Game Info</Modal.Title>
-                </Modal.Header>
-
-                <Modal.Body className="flex-column p-0">
-
-                    <div className="ratio ratio-16x9">
-                        {darkMode ?
-                            <img src={"img/game-preview.webp"}></img>
-                            :
-                            <img src={"img/game-preview.webp"}></img>
-                        }
-                    </div>
-
-                    <div className="p-3">
-                        {packageJson.description}
-                    </div>
-
-                </Modal.Body>
-
-                <Modal.Footer className="justify-content-between">
-
-                    <div></div>
-
-                    <ArticlesButton variant="outline-dark" onClick={() => {
-                        setShow(false)
-                    }}>
-                        Close
-                    </ArticlesButton>
-
-                </Modal.Footer>
-
-            </Modal>
-        </>
-    )
-
+        <ArticlesModal
+            show={show}
+            setShow={setShow}
+            title="Game Info"
+            size="md"
+            modalClassName="games-info-modal"
+            contentSx={{ p: 0 }}
+        >
+            <Box sx={{ aspectRatio: "16 / 9" }}>
+                <Box
+                    component="img"
+                    src="/img/game-preview.webp"
+                    alt="Trash Chute game preview"
+                    sx={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+                />
+            </Box>
+            <Box sx={{ p: "1rem" }}>{packageInfo.description}</Box>
+        </ArticlesModal>
+    );
 }
