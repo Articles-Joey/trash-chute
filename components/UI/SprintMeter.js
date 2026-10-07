@@ -1,45 +1,48 @@
-"use client"
-import Box from "@mui/material/Box"
-import { useEffect, useRef } from "react"
-import { useGameStore } from "@/hooks/useGameStore"
+"use client";
+import Box from "@mui/material/Box";
+import { useEffect, useRef } from "react";
+import { useGameStore } from "@/hooks/useGameStore";
 
 export default function SprintMeter() {
-    const fillRef = useRef(null)
-    const trackRef = useRef(null)
-    const labelRef = useRef(null)
+    const fillRef = useRef(null);
+    const trackRef = useRef(null);
+    const labelRef = useRef(null);
 
     useEffect(() => {
         // Subscribe directly — no React re-renders, smooth 60fps DOM updates
         const unsub = useGameStore.subscribe((state) => {
-            const { sprintMeter, sprintOnCooldown } = state
+            const { sprintMeter, sprintOnCooldown } = state;
 
             if (fillRef.current) {
-                fillRef.current.style.width = `${sprintMeter * 100}%`
+                fillRef.current.style.width = `${sprintMeter * 100}%`;
 
                 if (sprintOnCooldown) {
-                    fillRef.current.style.background = "linear-gradient(90deg, #ff4444, #ff8800)"
+                    fillRef.current.style.background =
+                        "linear-gradient(90deg, #ff4444, #ff8800)";
                 } else if (sprintMeter < 0.35) {
-                    fillRef.current.style.background = "linear-gradient(90deg, #ffaa00, #ffdd00)"
+                    fillRef.current.style.background =
+                        "linear-gradient(90deg, #ffaa00, #ffdd00)";
                 } else {
-                    fillRef.current.style.background = "linear-gradient(90deg, #00ccff, #00ffcc)"
+                    fillRef.current.style.background =
+                        "linear-gradient(90deg, #00ccff, #00ffcc)";
                 }
             }
 
             if (labelRef.current) {
                 if (sprintOnCooldown) {
-                    labelRef.current.textContent = "Recovering..."
+                    labelRef.current.textContent = "Recovering...";
                 } else if (sprintMeter >= 1) {
-                    labelRef.current.textContent = "Sprint  [Shift]"
+                    labelRef.current.textContent = "Sprint  [Shift]";
                 } else if (sprintMeter <= 0) {
-                    labelRef.current.textContent = "Exhausted"
+                    labelRef.current.textContent = "Exhausted";
                 } else {
-                    labelRef.current.textContent = "Sprint  [Shift]"
+                    labelRef.current.textContent = "Sprint  [Shift]";
                 }
             }
-        })
+        });
 
-        return () => unsub()
-    }, [])
+        return () => unsub();
+    }, []);
 
     return (
         <Box
@@ -66,7 +69,7 @@ export default function SprintMeter() {
                     textShadow: "0 1px 4px rgba(0,0,0,0.9)",
                 }}
             >
-                Sprint  [Shift]
+                Sprint [Shift]
             </Box>
             <Box
                 ref={trackRef}
@@ -92,5 +95,5 @@ export default function SprintMeter() {
                 />
             </Box>
         </Box>
-    )
+    );
 }

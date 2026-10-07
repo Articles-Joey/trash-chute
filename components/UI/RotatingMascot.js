@@ -8,9 +8,11 @@ import { ModelDumpster } from "../Models/Dumpster";
 
 export default function RotatingMascot() {
     return (
-        <Box className="rotating-mascot-container" sx={{ width: "100%", height: "100%" }}>
+        <Box
+            className="rotating-mascot-container"
+            sx={{ width: "100%", height: "100%" }}
+        >
             <Canvas>
-
                 <OrbitControls
                     autoRotate
                     enableZoom={false}
@@ -19,10 +21,12 @@ export default function RotatingMascot() {
                     autoRotateSpeed={10}
                 />
 
-                <ambientLight intensity={1} />
+                <ambientLight intensity={3} />
 
-                <ModelDumpster scale={2} position={[0, -2, 0]} />
-
+                <ModelDumpster
+                    scale={2}
+                    position={[0, -2, 0]}
+                />
             </Canvas>
         </Box>
     );

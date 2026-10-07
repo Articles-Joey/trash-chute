@@ -1,11 +1,9 @@
-import { createContext, createRef, forwardRef, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, Suspense, useMemo, useRef } from "react";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Sky, useDetectGPU, useTexture, OrbitControls, Cylinder, QuadraticBezierLine, Text, Stats } from "@react-three/drei";
-
-import { NearestFilter, RepeatWrapping, TextureLoader, Vector3 } from "three";
-
-import { Debug, Physics, useBox, useSphere } from "@react-three/cannon";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Sky, Text, Stats } from "@react-three/drei";
+import { CuboidCollider, Physics, RigidBody } from "@react-three/rapier";
+import { Vector3 } from "three";
 import { degToRad } from "three/src/math/MathUtils";
 
 import { Model as SpacesuitModel } from "@/components/Models/Spacesuit";
@@ -21,36 +19,28 @@ import Wall from "./Wall";
 import { ModelSkybox } from "../Models/Forest_clearing_1_top_skybox";
 import { useStore } from "@/hooks/useStore";
 
-function GameCanvas({
-    landingAnimation
-}) {
-
-    const debug = useStore(state => state.debug);
-    const darkMode = useStore(state => state.darkMode);
-    const graphicsQuality = useStore(state => state.graphicsQuality);
+function GameCanvas({ landingAnimation }) {
+    const debug = useStore((state) => state.debug);
+    const darkMode = useStore((state) => state.darkMode);
+    const graphicsQuality = useStore((state) => state.graphicsQuality);
     const showStats = useStore((state) => state?.debugConfig?.showStats);
 
     const {
         // debug,
         controlType,
-        topCheckpoint
-    } = useGameStore(state => ({
+        topCheckpoint,
+    } = useGameStore((state) => ({
         // debug: state.debug,
         controlType: state.controlType,
-        topCheckpoint: state.topCheckpoint
+        topCheckpoint: state.topCheckpoint,
     }));
 
     let gameContent = (
         <>
-
-            <ModelSkybox 
-                scale={300}
-            />
+            <ModelSkybox scale={300} />
 
             {/* {controlType == "Mouse and Keyboard" && */}
-            {!landingAnimation &&
-                <Player />
-            }
+            {!landingAnimation && <Player />}
 
             {/* Bottom Ground */}
             <Ground
@@ -77,27 +67,13 @@ function GameCanvas({
             />
 
             <TopCheckpoint
-                args={[
-                    (10 / 1.2),
-                    2.25,
-                    (15 / 1.2),
-                ]}
+                args={[10 / 1.2, 2.25, 15 / 1.2]}
                 position={[0, 51, 94.25]}
             />
 
-            {topCheckpoint &&
-                <Text
-                    position={[0, 52, 94.25]}
-                    color="black"
-                    rotation={[0, degToRad(180), 0]}
-                >
-                    You made it!
-                </Text>
-            }
+            {topCheckpoint && <CheckpointText />}
 
-            <ModelKennyNLMiniGolfFlagRed
-                position={[0, 49.98, 90.25]}
-            />
+            <ModelKennyNLMiniGolfFlagRed position={[0, 49.98, 90.25]} />
 
             <Wall
                 args={[0.1, 50, 100]}
@@ -111,36 +87,24 @@ function GameCanvas({
 
             <Obstacles />
         </>
-    )
-
-    let physicsContent
-    if (debug) {
-        physicsContent = (
-            <Debug color="black" scale={1}>
-                {gameContent}
-            </Debug>
-        )
-    } else {
-        physicsContent = (
-            gameContent
-        )
-    }
+    );
 
     return (
-        <Canvas 
-            camera={{ 
-                position: [0, -2, -10], 
+        <Canvas
+            camera={{
+                position: [0, -2, -10],
                 fov: 50,
-                far: 10000.0 
+                far: 10000.0,
             }}
             id="game-canvas"
             shadows
             key={graphicsQuality}
         >
-
-            {showStats && <>
-                <Stats className="stats-overlay" />
-            </>}
+            {showStats && (
+                <>
+                    <Stats className="stats-overlay" />
+                </>
+            )}
 
             {/* {controlType !== "Mouse and Keyboard" &&
                 <OrbitControls
@@ -148,63 +112,101 @@ function GameCanvas({
                 />
             } */}
 
-            <Sky
-                sunPosition={[0, 10, 0]}
-            />
+            <Sky sunPosition={[0, 10, 0]} />
 
             <ambientLight intensity={darkMode ? 1 : 3} />
             {/* <spotLight intensity={30000} position={[-50, 100, 50]} angle={5} penumbra={1} /> */}
 
-            {(!landingAnimation && controlType == "Mouse and Keyboard") &&
+            {!landingAnimation && controlType == "Mouse and Keyboard" && (
                 <FPV
                 // location={location}
                 // setLocation={setLocation}
                 // menuOpen={menuOpen}
                 />
-            }
+            )}
 
-            <Physics defaultContactMaterial={{ friction: 0, restitution: 0 }}>
-
-                {physicsContent}
-
-            </Physics>
+            <Suspense fallback={null}>
+                <Physics
+                    debug={debug}
+                    colliders={false}
+                    gravity={[0, -9.81, 0]}
+                    timeStep={1 / 60}
+                >
+                    {gameContent}
+                </Physics>
+            </Suspense>
 
             {landingAnimation && <LandingCamera />}
-
         </Canvas>
-    )
+    );
 }
 
-export default memo(GameCanvas)
+export default memo(GameCanvas);
 
-function Ground({ args, position }) {
+function CheckpointText() {
+    const textRef = useRef(null);
+    const cameraPosition = useMemo(() => new Vector3(), []);
+    const textPosition = useMemo(() => new Vector3(), []);
 
-    const [ref, api] = useBox(() => ({
-        mass: 0,
-        type: 'Static',
-        args: args,
-        position: position,
-    }))
+    useFrame(({ camera }) => {
+        const text = textRef.current;
+        if (!text) return;
+
+        camera.getWorldPosition(cameraPosition);
+        text.getWorldPosition(textPosition);
+        // Calculate yaw directly to keep the text upright through a full 360°.
+        text.rotation.set(
+            0,
+            Math.atan2(
+                cameraPosition.x - textPosition.x,
+                cameraPosition.z - textPosition.z,
+            ),
+            0,
+        );
+    });
 
     return (
-        <mesh ref={ref} castShadow>
-            <boxGeometry args={args} />
-            <meshStandardMaterial color="gray" />
-        </mesh>
-    )
+        <Text
+            ref={textRef}
+            position={[0, 54, 94.25]}
+            color="black"
+            outlineColor="white"
+            outlineWidth={0.05}
+        >
+            You made it!
+        </Text>
+    );
+}
 
+function Ground({ args, position }) {
+    return (
+        <RigidBody
+            type="fixed"
+            position={position}
+            colliders={false}
+            friction={0}
+            restitution={0}
+        >
+            <CuboidCollider args={args.map((size) => size / 2)} />
+            <mesh castShadow>
+                <boxGeometry args={args} />
+                <meshStandardMaterial color="gray" />
+            </mesh>
+        </RigidBody>
+    );
 }
 
 const TARGET = [0, 1, 0];
 const CAM_Y = 1;
 const CAM_Z = -14;
-const SWING_RANGE = 3;   // units left/right from center
+const SWING_RANGE = 3; // units left/right from center
 const SWING_SPEED = 0.3; // radians per second
 
 function LandingCamera() {
     const { camera } = useThree();
     useFrame(({ clock }) => {
-        camera.position.x = Math.sin(clock.elapsedTime * SWING_SPEED) * SWING_RANGE;
+        camera.position.x =
+            Math.sin(clock.elapsedTime * SWING_SPEED) * SWING_RANGE;
         camera.position.y = CAM_Y;
         camera.position.z = CAM_Z;
         camera.lookAt(...TARGET);

@@ -24,8 +24,14 @@ export default function GlobalClientModals() {
                     },
                     Audio: {
                         sliders: [
-                            { key: "backgroundMusicVolume", label: "Background Music Volume" },
-                            { key: "soundEffectsVolume", label: "Sound Effects Volume" },
+                            {
+                                key: "backgroundMusicVolume",
+                                label: "Background Music Volume",
+                            },
+                            {
+                                key: "soundEffectsVolume",
+                                label: "Sound Effects Volume",
+                            },
                         ],
                     },
                     Controls: {

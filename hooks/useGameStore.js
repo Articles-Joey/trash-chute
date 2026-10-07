@@ -1,7 +1,7 @@
-"use client"
+"use client";
 // import { create } from 'zustand'
-import { createWithEqualityFn as create } from 'zustand/traditional'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { createWithEqualityFn as create } from "zustand/traditional";
+import { persist, createJSONStorage } from "zustand/middleware";
 // import { nanoid } from 'nanoid'
 
 // const getLocalStorage = (key) => JSON.parse(window.localStorage.getItem(key))
@@ -10,36 +10,35 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 export const useGameStore = create()(
     persist(
         (set, get) => ({
-
             // Mouse and Keyboard
             // Touch
             controlType: "Mouse and Keyboard",
             setControlType: (newValue) => {
                 set((prev) => ({
-                    controlType: newValue
-                }))
+                    controlType: newValue,
+                }));
             },
 
             topCheckpoint: false,
             setTopCheckpoint: (newValue) => {
                 set((prev) => ({
-                    topCheckpoint: newValue
-                }))
+                    topCheckpoint: newValue,
+                }));
                 // setLocalStorage('game:trash-chute:topCheckpoint', newValue)
             },
 
             debug: false,
             setDebug: (newValue) => {
                 set((prev) => ({
-                    debug: newValue
-                }))
+                    debug: newValue,
+                }));
             },
 
             freezeObstacles: false,
             setFreezeObstacles: (newValue) => {
                 set((prev) => ({
-                    freezeObstacles: newValue
-                }))
+                    freezeObstacles: newValue,
+                }));
             },
 
             // galleryTheme: "Forest",
@@ -77,18 +76,18 @@ export const useGameStore = create()(
             //     }))
             // },
 
-            ref: null,
-            api: null,
+            playerBody: null,
             position: [0, 0, 0], // Initial sphere position
-            setPlayer: (ref, api) => set({ ref, api }),
+            setPlayerBody: (playerBody) => set({ playerBody }),
             setPosition: (position) => set({ position }),
 
             tagCounter: 0,
             setTagCounter: (tagCounter) => set({ tagCounter }),
 
-            sprintMeter: 1,          // 0..1 normalized
+            sprintMeter: 1, // 0..1 normalized
             sprintOnCooldown: false,
-            setSprintMeter: (meter, onCooldown) => set({ sprintMeter: meter, sprintOnCooldown: onCooldown }),
+            setSprintMeter: (meter, onCooldown) =>
+                set({ sprintMeter: meter, sprintOnCooldown: onCooldown }),
 
             isThirdPerson: false,
             cameraDistance: 6,
@@ -96,8 +95,15 @@ export const useGameStore = create()(
             setCameraDistance: (cameraDistance) => set({ cameraDistance }),
         }),
         {
-            name: 'trash-chute-game-storage', // name of the item in the storage (must be unique)
+            name: "trash-chute-game-storage", // name of the item in the storage (must be unique)
+            // Physics handles belong to the mounted scene and cannot be serialized.
+            partialize: (state) =>
+                Object.fromEntries(
+                    Object.entries(state).filter(
+                        ([key]) => !["playerBody", "ref", "api"].includes(key),
+                    ),
+                ),
             // storage: createJSONStorage(() => sessionStorage), // (optional) by default, 'localStorage' is used
         },
     ),
-)
+);

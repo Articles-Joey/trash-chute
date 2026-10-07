@@ -18,7 +18,7 @@ export function createAppTheme(mode = "dark") {
         palette: {
             mode,
             primary: { main: "#f9edcd" },
-            game: { card: cardBackground },
+            // game: { card: cardBackground },
         },
         typography: {
             fontFamily: roboto.style.fontFamily,
@@ -32,20 +32,25 @@ export function createAppTheme(mode = "dark") {
             MuiAlert: {
                 styleOverrides: {
                     root: {
-                        variants: [{
-                            props: { severity: "info" },
-                            style: { backgroundColor: "#60a5fa" },
-                        }],
+                        variants: [
+                            {
+                                props: { severity: "info" },
+                                style: { backgroundColor: "#60a5fa" },
+                            },
+                        ],
                     },
                 },
             },
             MuiCssBaseline: {
                 // Dev-box still uses these compatibility utilities internally.
                 styleOverrides: (muiTheme) => ({
-                    ...bootstrapCompatibilityTheme.MuiCssBaseline.styleOverrides(muiTheme),
+                    ...bootstrapCompatibilityTheme.MuiCssBaseline.styleOverrides(
+                        muiTheme,
+                    ),
                     ":root": {
-                        "--card-background-override": cardBackground,
-                        "--articles-card-font-color": mode === "dark" ? "#fff" : "#212529",
+                        // "--card-background-override": cardBackground,
+                        "--articles-card-font-color":
+                            mode === "dark" ? "#fff" : "#212529",
                     },
                     ".stats-overlay": {
                         position: "fixed",

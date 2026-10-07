@@ -8,33 +8,35 @@ Source: https://sketchfab.com/3d-models/forest-clearing-1-top-skybox-ed2c72a25b8
 Title: Forest Clearing 1 Top Skybox
 */
 
-import React from 'react'
-import { useGLTF } from '@react-three/drei'
-import { useStore } from '@/hooks/useStore';
+import React from "react";
+import { useGLTF } from "@react-three/drei";
+import { useStore } from "@/hooks/useStore";
 
-const HIGH_MODEL = 'models/forest_clearing_1_top_skybox-4k.glb'
-const LOW_MODEL = 'models/forest_clearing_1_top_skybox-4k-transformed.glb'
+const HIGH_MODEL = "models/forest_clearing_1_top_skybox-4k.glb";
+const LOW_MODEL = "models/forest_clearing_1_top_skybox-4k-transformed.glb";
 
 export function ModelSkybox(props) {
+    const darkMode = useStore((state) => state.darkMode);
 
-  const darkMode = useStore(state => state.darkMode);
+    const graphicsQuality = useStore((state) => state.graphicsQuality);
+    const modelPath = graphicsQuality === "High" ? HIGH_MODEL : LOW_MODEL;
 
-  const graphicsQuality = useStore(state => state.graphicsQuality);
-  const modelPath = graphicsQuality === 'High' ? HIGH_MODEL : LOW_MODEL;
+    const { nodes, materials } = useGLTF(modelPath);
 
-  const { nodes, materials } = useGLTF(modelPath)
-
-  return (
-    <group {...props} dispose={null}>
-      <mesh
-        geometry={nodes.Sphere_Skybox_0.geometry}
-        material={materials.Skybox}
-        material-color={darkMode ? '#757575' : '#ffffff'}
-        rotation={[-Math.PI / 2, 0, 0]}
-      />
-    </group>
-  )
+    return (
+        <group
+            {...props}
+            dispose={null}
+        >
+            <mesh
+                geometry={nodes.Sphere_Skybox_0.geometry}
+                material={materials.Skybox}
+                material-color={darkMode ? "#757575" : "#ffffff"}
+                rotation={[-Math.PI / 2, 0, 0]}
+            />
+        </group>
+    );
 }
 
-useGLTF.preload(HIGH_MODEL)
-useGLTF.preload(LOW_MODEL)
+useGLTF.preload(HIGH_MODEL);
+useGLTF.preload(LOW_MODEL);

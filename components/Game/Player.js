@@ -1,11 +1,19 @@
-import { useFrame, useThree } from "@react-three/fiber"
-import { useCompoundBody } from "@react-three/cannon"
-import { useEffect, useRef, useState, memo, useMemo, forwardRef, useImperativeHandle } from "react"
-import { Vector3, Color, MeshStandardMaterial, SphereGeometry } from "three"
-import { useKeyboard } from "@/hooks/useKeyboard"
-import { useGameStore } from "@/hooks/useGameStore"
-import { useControlsStore } from "@/hooks/useControlsStore"
-import { Model as SpacesuitModel } from "@/components/Models/Spacesuit"
+import { useFrame, useThree } from "@react-three/fiber";
+import { CapsuleCollider, RigidBody } from "@react-three/rapier";
+import {
+    useEffect,
+    useRef,
+    useState,
+    memo,
+    forwardRef,
+    useImperativeHandle,
+} from "react";
+import { Vector3 } from "three";
+import { useKeyboard } from "@/hooks/useKeyboard";
+import { useGameStore } from "@/hooks/useGameStore";
+import { useControlsStore } from "@/hooks/useControlsStore";
+import { Model as SpacesuitModel } from "@/components/Models/Spacesuit";
+import { PLAYER_COLLISION_GROUPS } from "./physicsGroups";
 
 const JUMP_FORCE = 6;
 const SPEED = 4;
@@ -17,132 +25,116 @@ const THIRD_PERSON_DEFAULT_DISTANCE = 6;
 const THIRD_PERSON_HEIGHT = 0.5;
 const CAMERA_GROUND_OFFSET = 0.3;
 const SCROLL_SENSITIVITY = 0.5;
-const KNOCKBACK_DURATION = 500; // ms
 
 function PlayerBase() {
-
     const setTopCheckpoint = useGameStore((state) => state.setTopCheckpoint);
-    const setPlayer = useGameStore((state) => state.setPlayer);
+    const setPlayerBody = useGameStore((state) => state.setPlayerBody);
     const setPosition = useGameStore((state) => state.setPosition);
     const setSprintMeter = useGameStore((state) => state.setSprintMeter);
-    const position = useGameStore((state) => state.position);
     const setIsThirdPerson = useGameStore((state) => state.setIsThirdPerson);
     const setCameraDistance = useGameStore((state) => state.setCameraDistance);
 
-    const { moveBackward, moveForward, moveRight, moveLeft, jump, shift, crouch, cameraView } = useKeyboard()
+    const {
+        moveBackward,
+        moveForward,
+        moveRight,
+        moveLeft,
+        jump,
+        shift,
+        crouch,
+        cameraView,
+    } = useKeyboard();
 
-    const { camera } = useThree()
+    const { camera } = useThree();
 
-    const [action, setAction] = useState("Idle")
-    const [isJumping, setIsJumping] = useState(false)
-    const [isThirdPerson, setIsThirdPersonLocal] = useState(false)
+    const [action, setAction] = useState("Idle");
+    const [isJumping, setIsJumping] = useState(false);
+    const [isThirdPerson, setIsThirdPersonLocal] = useState(false);
 
-    const prevCameraView = useRef(false)
-    const cameraDistanceRef = useRef(THIRD_PERSON_DEFAULT_DISTANCE)
-    const modelRef = useRef()
-    const groundedFrames = useRef(0)
-    const lastJumpTime = useRef(0)
-    const lastForwardPressTime = useRef(0)
-    const isDoubleTapSprinting = useRef(false)
-    const wasMovingForward = useRef(false)
-    const knockbackEndTime = useRef(0)
-    const explosionRef = useRef(null)
+    const prevCameraView = useRef(false);
+    const cameraDistanceRef = useRef(THIRD_PERSON_DEFAULT_DISTANCE);
+    const modelRef = useRef();
+    const groundedFrames = useRef(0);
+    const lastJumpTime = useRef(0);
+    const lastForwardPressTime = useRef(0);
+    const isDoubleTapSprinting = useRef(false);
+    const wasMovingForward = useRef(false);
+    const knockbackEndTime = useRef(0);
+    const explosionRef = useRef(null);
 
     // Sprint state
-    const SPRINT_MAX = 1.5       // seconds of sprint energy
-    const SPRINT_COOLDOWN = 5  // seconds before refill starts
-    const SPRINT_REFILL = 1  // energy per second (fills in 2s)
-    const sprintEnergyRef = useRef(SPRINT_MAX)
-    const lastSprintActiveRef = useRef(0)  // timestamp of last active sprint frame
+    const SPRINT_MAX = 1.5; // seconds of sprint energy
+    const SPRINT_COOLDOWN = 5; // seconds before refill starts
+    const SPRINT_REFILL = 1; // energy per second (fills in 2s)
+    const sprintEnergyRef = useRef(SPRINT_MAX);
+    const lastSprintActiveRef = useRef(0); // timestamp of last active sprint frame
 
-    const [ref, api] = useCompoundBody(() => ({
-        mass: 1,
-        type: 'Dynamic',
-        position: [0, 1, 0],
-        fixedRotation: true,
-        angularDamping: 1,
-        linearDamping: 0,
-        shapes: [
-            { type: 'Sphere', args: [0.35], position: [0, 0.4, 0] },
-            { type: 'Sphere', args: [0.35], position: [0, -0.4, 0] },
-            { type: 'Cylinder', args: [0.3, 0.3, 0.8, 8], position: [0, 0, 0] },
-        ],
-        onCollide: (e) => {
-            if (e.body.userData.topCheckpoint) {
-                setTopCheckpoint(true)
-            }
-            // Launch the player when struck by a falling obstacle
-            if (e.body.userData.obstacle) {
-                const isSpikyBall = e.body.userData.spikyBall;
-                const hForce = isSpikyBall ? 28 : 18;
-                const vForce = isSpikyBall ? 20 : 14;
-                const duration = isSpikyBall ? 800 : 500;
-                knockbackEndTime.current = Date.now() + duration;
-                api.velocity.set(
-                    (Math.random() - 0.5) * hForce,
-                    vForce,
-                    (Math.random() - 0.5) * hForce,
-                );
-                if (isSpikyBall && explosionRef.current) {
-                    explosionRef.current.trigger([...pos.current]);
-                }
-            }
+    const bodyRef = useRef(null);
+    const pos = useRef([0, 1, 0]);
+
+    const handleIntersectionEnter = ({ other }) => {
+        if (other.rigidBody?.userData?.topCheckpoint) setTopCheckpoint(true);
+    };
+
+    const handleCollisionEnter = ({ other }) => {
+        const body = bodyRef.current;
+        const userData = other.rigidBody?.userData;
+        if (!body || !userData?.obstacle) return;
+
+        // Launch the player when struck by a falling obstacle.
+        const isSpikyBall = userData.spikyBall;
+        const hForce = isSpikyBall ? 28 : 18;
+        const vForce = isSpikyBall ? 20 : 14;
+        knockbackEndTime.current = Date.now() + (isSpikyBall ? 800 : 500);
+        body.setLinvel(
+            {
+                x: (Math.random() - 0.5) * hForce,
+                y: vForce,
+                z: (Math.random() - 0.5) * hForce,
+            },
+            true,
+        );
+        if (isSpikyBall && explosionRef.current) {
+            const { x, y, z } = body.translation();
+            explosionRef.current.trigger([x, y, z]);
         }
-    }))
+    };
 
     useEffect(() => {
         // YXZ order = yaw first (world Y), then pitch (local X) — prevents gimbal tilt
-        camera.rotation.order = 'YXZ';
-        setPlayer(ref, api);
-        const unsubscribe = api.position.subscribe((p) => {
-            setPosition([...p]);
-        });
-        return () => unsubscribe();
-    }, [ref, api, setPlayer, setPosition]);
-
-    const vel = useRef([0, 0, 0])
-    useEffect(() => {
-        const unsubscribe = api.velocity.subscribe((v) => vel.current = v)
-        return () => unsubscribe();
-    }, [api.velocity])
-
-    const pos = useRef([0, 0, 0])
-    useEffect(() => {
-        const unsubscribe = api.position.subscribe((p) => {
-            pos.current = p
-            if (p[1] < -25) {
-                api.position.set(0, 5, 0);
-                camera.lookAt(0, 20, 50);
-                api.velocity.set(0, 0, 0);
-            }
-        })
-        return () => unsubscribe();
-    }, [api.position])
+        camera.rotation.order = "YXZ";
+        setPlayerBody(bodyRef.current);
+        return () => setPlayerBody(null);
+    }, [camera, setPlayerBody]);
 
     // Toggle third-person on key press (not release)
     useEffect(() => {
         if (cameraView && !prevCameraView.current) {
-            setIsThirdPersonLocal(prev => {
+            setIsThirdPersonLocal((prev) => {
                 const next = !prev;
                 setIsThirdPerson(next);
                 return next;
             });
         }
-        prevCameraView.current = cameraView
-    }, [cameraView])
+        prevCameraView.current = cameraView;
+    }, [cameraView]);
 
     // Scroll wheel to adjust third-person camera distance
     useEffect(() => {
         const handleWheel = (e) => {
             cameraDistanceRef.current = Math.min(
                 THIRD_PERSON_MAX_DISTANCE,
-                Math.max(THIRD_PERSON_MIN_DISTANCE, cameraDistanceRef.current + e.deltaY * SCROLL_SENSITIVITY * 0.01)
+                Math.max(
+                    THIRD_PERSON_MIN_DISTANCE,
+                    cameraDistanceRef.current +
+                        e.deltaY * SCROLL_SENSITIVITY * 0.01,
+                ),
             );
             setCameraDistance(cameraDistanceRef.current);
-        }
-        document.addEventListener('wheel', handleWheel, { passive: true })
-        return () => document.removeEventListener('wheel', handleWheel)
-    }, [])
+        };
+        document.addEventListener("wheel", handleWheel, { passive: true });
+        return () => document.removeEventListener("wheel", handleWheel);
+    }, []);
 
     // Animation state from keyboard
     useEffect(() => {
@@ -152,29 +144,58 @@ function PlayerBase() {
         } else {
             setAction("Idle");
         }
-    }, [moveBackward, moveForward, moveRight, moveLeft, isJumping, shift])
+    }, [moveBackward, moveForward, moveRight, moveLeft, isJumping, shift]);
 
     useFrame((_, delta) => {
+        const body = bodyRef.current;
+        if (!body) return;
+
+        let translation = body.translation();
+        if (translation.y < -25) {
+            body.setTranslation({ x: 0, y: 5, z: 0 }, true);
+            body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            knockbackEndTime.current = 0;
+            groundedFrames.current = 0;
+            setIsJumping(false);
+            camera.lookAt(0, 20, 50);
+            translation = body.translation();
+        }
+        pos.current = [translation.x, translation.y, translation.z];
+        setPosition([...pos.current]);
+        const velocity = body.linvel();
 
         // --- Camera ---
         if (isThirdPerson) {
-            const playerCenter = new Vector3(pos.current[0], pos.current[1] + THIRD_PERSON_HEIGHT, pos.current[2])
-            const forward = new Vector3(0, 0, -1).applyEuler(camera.rotation)
-            const cameraPos = playerCenter.clone().sub(forward.clone().multiplyScalar(cameraDistanceRef.current))
-            if (cameraPos.y < CAMERA_GROUND_OFFSET) cameraPos.y = CAMERA_GROUND_OFFSET;
-            camera.position.copy(cameraPos)
-            camera.lookAt(playerCenter)
-        } else {
-            camera.position.copy(new Vector3(
+            const playerCenter = new Vector3(
                 pos.current[0],
-                pos.current[1] / (crouch ? 2 : 1) + 0.3,
-                pos.current[2]
-            ));
+                pos.current[1] + THIRD_PERSON_HEIGHT,
+                pos.current[2],
+            );
+            const forward = new Vector3(0, 0, -1).applyEuler(camera.rotation);
+            const cameraPos = playerCenter
+                .clone()
+                .sub(forward.clone().multiplyScalar(cameraDistanceRef.current));
+            if (cameraPos.y < CAMERA_GROUND_OFFSET)
+                cameraPos.y = CAMERA_GROUND_OFFSET;
+            camera.position.copy(cameraPos);
+            camera.lookAt(playerCenter);
+        } else {
+            camera.position.copy(
+                new Vector3(
+                    pos.current[0],
+                    pos.current[1] / (crouch ? 2 : 1) + 0.3,
+                    pos.current[2],
+                ),
+            );
         }
 
         // Keep model in sync with physics body even during knockback
         if (modelRef.current) {
-            modelRef.current.position.set(pos.current[0], pos.current[1], pos.current[2]);
+            modelRef.current.position.set(
+                pos.current[0],
+                pos.current[1],
+                pos.current[2],
+            );
         }
 
         // Suppress movement control while knockback is active
@@ -186,14 +207,18 @@ function PlayerBase() {
 
         const tc = useControlsStore.getState().touchControls;
 
-        let forwardInput = ((moveBackward || tc.backward) ? 1 : 0) - ((moveForward || tc.forward) ? 1 : 0);
-        let sideInput = ((moveLeft || tc.left) ? 1 : 0) - ((moveRight || tc.right) ? 1 : 0);
+        let forwardInput =
+            (moveBackward || tc.backward ? 1 : 0) -
+            (moveForward || tc.forward ? 1 : 0);
+        let sideInput =
+            (moveLeft || tc.left ? 1 : 0) - (moveRight || tc.right ? 1 : 0);
         let rotationX = 0;
         let rotationY = 0;
 
         const isForward = moveForward || tc.forward;
         if (isForward && !wasMovingForward.current) {
-            if (Date.now() - lastForwardPressTime.current < 300) isDoubleTapSprinting.current = true;
+            if (Date.now() - lastForwardPressTime.current < 300)
+                isDoubleTapSprinting.current = true;
             lastForwardPressTime.current = Date.now();
         }
         if (!isForward) isDoubleTapSprinting.current = false;
@@ -206,8 +231,10 @@ function PlayerBase() {
             if (Math.abs(axisY) > CONTROLLER_DEADZONE) forwardInput += axisY;
             const lookX = gamepad.axes[2];
             const lookY = gamepad.axes[3];
-            if (Math.abs(lookX) > CONTROLLER_DEADZONE) rotationY = -lookX * LOOK_SENSITIVITY;
-            if (Math.abs(lookY) > CONTROLLER_DEADZONE) rotationX = -lookY * LOOK_SENSITIVITY;
+            if (Math.abs(lookX) > CONTROLLER_DEADZONE)
+                rotationY = -lookX * LOOK_SENSITIVITY;
+            if (Math.abs(lookY) > CONTROLLER_DEADZONE)
+                rotationX = -lookY * LOOK_SENSITIVITY;
         }
 
         // Touch look contribution (continuous per-frame, rate = 2 rad/sec at full deflection)
@@ -217,7 +244,10 @@ function PlayerBase() {
 
         if (rotationX !== 0 || rotationY !== 0) {
             camera.rotation.y += rotationY;
-            camera.rotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, camera.rotation.x + rotationX));
+            camera.rotation.x = Math.max(
+                -Math.PI / 3,
+                Math.min(Math.PI / 3, camera.rotation.x + rotationX),
+            );
             camera.rotation.z = 0; // prevent roll drift
         }
 
@@ -231,82 +261,118 @@ function PlayerBase() {
         // This correctly handles ramps where Y velocity is non-zero but the player is still on a surface.
         const isGrounded = !isJumping && Date.now() >= knockbackEndTime.current;
         const knockedBack = Date.now() < knockbackEndTime.current;
-        const wantSprint = isSprintingInput && isMoving && isGrounded && !knockedBack;
+        const wantSprint =
+            isSprintingInput && isMoving && isGrounded && !knockedBack;
         const isSprinting = wantSprint && sprintEnergyRef.current > 0;
 
         if (isSprinting) {
-            sprintEnergyRef.current = Math.max(0, sprintEnergyRef.current - delta);
+            sprintEnergyRef.current = Math.max(
+                0,
+                sprintEnergyRef.current - delta,
+            );
             lastSprintActiveRef.current = Date.now();
         } else {
-            const idleMs = lastSprintActiveRef.current > 0
-                ? Date.now() - lastSprintActiveRef.current
-                : Infinity;
+            const idleMs =
+                lastSprintActiveRef.current > 0
+                    ? Date.now() - lastSprintActiveRef.current
+                    : Infinity;
             const onCooldown = idleMs < SPRINT_COOLDOWN * 1000;
             if (!onCooldown) {
-                sprintEnergyRef.current = Math.min(SPRINT_MAX, sprintEnergyRef.current + delta * SPRINT_REFILL);
+                sprintEnergyRef.current = Math.min(
+                    SPRINT_MAX,
+                    sprintEnergyRef.current + delta * SPRINT_REFILL,
+                );
             }
         }
 
         const sprintNormalized = sprintEnergyRef.current / SPRINT_MAX;
-        const sprintOnCooldown = lastSprintActiveRef.current > 0
-            && (Date.now() - lastSprintActiveRef.current) < SPRINT_COOLDOWN * 1000
-            && !isSprinting;
+        const sprintOnCooldown =
+            lastSprintActiveRef.current > 0 &&
+            Date.now() - lastSprintActiveRef.current < SPRINT_COOLDOWN * 1000 &&
+            !isSprinting;
         setSprintMeter(sprintNormalized, sprintOnCooldown);
 
-        const direction = new Vector3()
+        const direction = new Vector3();
         direction
             .subVectors(frontVector, sideVector)
             .normalize()
-            .applyEuler(camera.rotation)
-        direction.y = 0
-        direction.normalize().multiplyScalar(SPEED * (isSprinting ? 2 : 1))
+            .applyEuler(camera.rotation);
+        direction.y = 0;
+        direction.normalize().multiplyScalar(SPEED * (isSprinting ? 2 : 1));
 
-        api.velocity.set(direction.x, vel.current[1], direction.z)
+        body.setLinvel({ x: direction.x, y: velocity.y, z: direction.z }, true);
 
         // --- Ground detection ---
-        if (Math.abs(vel.current[1]) < 0.1) {
+        if (Math.abs(velocity.y) < 0.1) {
             groundedFrames.current++;
         } else {
             groundedFrames.current = 0;
         }
 
         // Landing
-        if (isJumping && groundedFrames.current > 4 && Date.now() - lastJumpTime.current > 500) {
+        if (
+            isJumping &&
+            groundedFrames.current > 4 &&
+            Date.now() - lastJumpTime.current > 500
+        ) {
             setIsJumping(false);
         }
 
         // Jump
-        const isJumpingInput = jump || tc.jump || (gamepad?.buttons[0]?.pressed);
+        const isJumpingInput = jump || tc.jump || gamepad?.buttons[0]?.pressed;
         if (isJumpingInput && groundedFrames.current > 2 && !isJumping) {
-            api.velocity.set(vel.current[0], JUMP_FORCE, vel.current[2]);
+            body.setLinvel(
+                { x: direction.x, y: JUMP_FORCE, z: direction.z },
+                true,
+            );
             setIsJumping(true);
             lastJumpTime.current = Date.now();
             groundedFrames.current = 0;
             // Consume touch jump so it doesn't re-fire on landing while still held
-            if (tc.jump) useControlsStore.getState().setTouchControls({ jump: false });
+            if (tc.jump)
+                useControlsStore.getState().setTouchControls({ jump: false });
         }
 
         // Update model rotation based on movement direction
         if (modelRef.current && isMoving) {
-            const angle = Math.atan2(direction.x, direction.z)
-            modelRef.current.rotation.y = angle
+            const angle = Math.atan2(direction.x, direction.z);
+            modelRef.current.rotation.y = angle;
         }
-
-    })
+    });
 
     return (
         <>
-            <mesh ref={ref} />
+            <RigidBody
+                ref={bodyRef}
+                position={[0, 1, 0]}
+                colliders={false}
+                collisionGroups={PLAYER_COLLISION_GROUPS}
+                lockRotations
+                linearDamping={0}
+                friction={0}
+                restitution={0}
+                ccd
+                onCollisionEnter={handleCollisionEnter}
+                onIntersectionEnter={handleIntersectionEnter}
+            >
+                <CapsuleCollider
+                    args={[0.5, 0.2]}
+                    mass={1}
+                />
+            </RigidBody>
             <Explosion ref={explosionRef} />
-            <group ref={modelRef} visible={isThirdPerson}>
+            <group
+                ref={modelRef}
+                visible={isThirdPerson}
+            >
                 <SpacesuitModel
                     scale={0.75}
-                    position={[0, -0.75, 0]}
+                    position={[0, -0.7, 0]}
                     action={isJumping ? "Jump" : action}
                 />
             </group>
         </>
-    )
+    );
 }
 
 export const Player = memo(PlayerBase);
@@ -323,25 +389,32 @@ const Explosion = forwardRef(function Explosion(_, ref) {
     const meshRefs = useRef([]);
     const active = useRef(false);
 
-    useImperativeHandle(ref, () => ({
-        trigger(origin) {
-            active.current = true;
-            particles.current = Array.from({ length: PARTICLE_COUNT }, () => {
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.random() * Math.PI;
-                const speed = 4 + Math.random() * 8;
-                return {
-                    position: [...origin],
-                    velocity: [
-                        Math.sin(phi) * Math.cos(theta) * speed,
-                        Math.sin(phi) * Math.sin(theta) * speed,
-                        Math.cos(phi) * speed,
-                    ],
-                    life: 1,
-                };
-            });
-        }
-    }), []);
+    useImperativeHandle(
+        ref,
+        () => ({
+            trigger(origin) {
+                active.current = true;
+                particles.current = Array.from(
+                    { length: PARTICLE_COUNT },
+                    () => {
+                        const theta = Math.random() * Math.PI * 2;
+                        const phi = Math.random() * Math.PI;
+                        const speed = 4 + Math.random() * 8;
+                        return {
+                            position: [...origin],
+                            velocity: [
+                                Math.sin(phi) * Math.cos(theta) * speed,
+                                Math.sin(phi) * Math.sin(theta) * speed,
+                                Math.cos(phi) * speed,
+                            ],
+                            life: 1,
+                        };
+                    },
+                );
+            },
+        }),
+        [],
+    );
 
     useFrame((_, delta) => {
         if (!active.current) return;
@@ -375,7 +448,7 @@ const Explosion = forwardRef(function Explosion(_, ref) {
             {Array.from({ length: PARTICLE_COUNT }, (_, i) => (
                 <mesh
                     key={i}
-                    ref={el => meshRefs.current[i] = el}
+                    ref={(el) => (meshRefs.current[i] = el)}
                     scale={0}
                 >
                     <sphereGeometry args={[1, 6, 6]} />

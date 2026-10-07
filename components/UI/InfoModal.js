@@ -19,7 +19,12 @@ export default function GameInfoModal({ show, setShow }) {
                     component="img"
                     src="/img/game-preview.webp"
                     alt="Trash Chute game preview"
-                    sx={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+                    sx={{
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                    }}
                 />
             </Box>
             <Box sx={{ p: "1rem" }}>{packageInfo.description}</Box>

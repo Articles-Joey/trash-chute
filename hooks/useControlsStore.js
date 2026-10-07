@@ -1,7 +1,7 @@
-"use client"
+"use client";
 // import { create } from 'zustand'
-import { createWithEqualityFn as create } from 'zustand/traditional'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { createWithEqualityFn as create } from "zustand/traditional";
+import { persist, createJSONStorage } from "zustand/middleware";
 // import { nanoid } from 'nanoid'
 
 // const getLocalStorage = (key) => JSON.parse(window.localStorage.getItem(key))
@@ -10,7 +10,6 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 export const useControlsStore = create()(
     persist(
         (set, get) => ({
-
             touchControls: {
                 enabled: false,
                 forward: false,
@@ -23,25 +22,27 @@ export const useControlsStore = create()(
             },
             setTouchControls: (partialUpdate) => {
                 set((prev) => ({
-                    touchControls: { ...prev.touchControls, ...partialUpdate }
-                }))
-            }
-
+                    touchControls: { ...prev.touchControls, ...partialUpdate },
+                }));
+            },
         }),
         {
-            name: 'trash-chute-touch-controls-storage',
+            name: "trash-chute-touch-controls-storage",
             // Only persist the enabled flag — input state is transient
             partialize: (state) => ({
-                // touchControls: { 
-                //     // enabled: state.touchControls.enabled 
+                // touchControls: {
+                //     // enabled: state.touchControls.enabled
                 // }
             }),
             version: 1,
             // Deep-merge nested touchControls so new fields survive schema changes
             merge: (persistedState, currentState) => ({
                 ...currentState,
-                touchControls: { ...currentState.touchControls, ...persistedState.touchControls }
+                touchControls: {
+                    ...currentState.touchControls,
+                    ...persistedState.touchControls,
+                },
             }),
         },
     ),
-)
+);

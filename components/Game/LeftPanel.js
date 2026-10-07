@@ -17,15 +17,37 @@ function LeftPanelContent() {
     const reloadScene = useStore((state) => state.reloadScene);
     const debug = useStore((state) => state.debug);
     const sidebar = useStore((state) => state.sidebar);
-    const api = useGameStore((state) => state.api);
+    const playerBody = useGameStore((state) => state.playerBody);
     const topCheckpoint = useGameStore((state) => state.topCheckpoint);
     const setTopCheckpoint = useGameStore((state) => state.setTopCheckpoint);
 
     return (
-        <Box className={sidebar ? "left-panel" : "left-panel collapsed"} sx={{ width: "100%" }}>
-            <Card sx={{ bgcolor: "game.card", backgroundImage: "none", fontSize: "0.875rem", border: 1, borderColor: "divider" }}>
-                <CardContent sx={{ p: 1, "&:last-child": { pb: 1 }, display: "flex", flexWrap: "wrap" }}>
-                    <GameMenuPrimaryButtonGroup useStore={useStore} type="GameMenu" useRouter={useRouter} />
+        <Box
+            className={sidebar ? "left-panel" : "left-panel collapsed"}
+            sx={{ width: "100%" }}
+        >
+            <Card
+                sx={{
+                    bgcolor: "game.card",
+                    backgroundImage: "none",
+                    fontSize: "0.875rem",
+                    border: 1,
+                    borderColor: "divider",
+                }}
+            >
+                <CardContent
+                    sx={{
+                        p: 1,
+                        "&:last-child": { pb: 1 },
+                        display: "flex",
+                        flexWrap: "wrap",
+                    }}
+                >
+                    <GameMenuPrimaryButtonGroup
+                        useStore={useStore}
+                        type="GameMenu"
+                        useRouter={useRouter}
+                    />
                     <ArticlesButton
                         small
                         sx={{ width: "50%" }}
@@ -38,7 +60,14 @@ function LeftPanelContent() {
                         small
                         sx={{ width: "50%" }}
                         disabled={!topCheckpoint}
-                        onClick={() => api?.position?.set(0, 55.98, 94.25)}
+                        onClick={() => {
+                            if (!playerBody?.isValid()) return;
+                            playerBody.setTranslation(
+                                { x: 0, y: 55.98, z: 94.25 },
+                                true,
+                            );
+                            playerBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+                        }}
                         startIcon={<RocketLaunchIcon />}
                     >
                         Teleport Top
@@ -62,11 +91,27 @@ export default memo(LeftPanelContent);
 
 function DebugPanel() {
     const freezeObstacles = useGameStore((state) => state.freezeObstacles);
-    const setFreezeObstacles = useGameStore((state) => state.setFreezeObstacles);
+    const setFreezeObstacles = useGameStore(
+        (state) => state.setFreezeObstacles,
+    );
 
     return (
-        <Box sx={{ mt: "1rem", p: "0.5rem", border: 1, borderColor: "divider", width: "100%" }}>
-            <Typography variant="h6" component="h5" sx={{ mb: "0.5rem" }}>Debug Panel</Typography>
+        <Box
+            sx={{
+                mt: "1rem",
+                p: "0.5rem",
+                border: 1,
+                borderColor: "divider",
+                width: "100%",
+            }}
+        >
+            <Typography
+                variant="h6"
+                component="h5"
+                sx={{ mb: "0.5rem" }}
+            >
+                Debug Panel
+            </Typography>
             <Box sx={{ width: "100%", display: "flex" }}>
                 {[false, true].map((value) => (
                     <ArticlesButton

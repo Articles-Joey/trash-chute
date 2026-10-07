@@ -12,7 +12,10 @@ export default function CameraZoomIndicator() {
 
     if (!isThirdPerson) return null;
 
-    const zoomPercent = Math.round((1 - (cameraDistance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)) * 100);
+    const zoomPercent = Math.round(
+        (1 - (cameraDistance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)) *
+            100,
+    );
 
     return (
         <Box
@@ -51,7 +54,14 @@ export default function CameraZoomIndicator() {
                     }}
                 />
             </Box>
-            <Box component="span" sx={{ color: "rgba(255,255,255,0.8)", fontSize: "0.65rem", fontWeight: 600 }}>
+            <Box
+                component="span"
+                sx={{
+                    color: "rgba(255,255,255,0.8)",
+                    fontSize: "0.65rem",
+                    fontWeight: 600,
+                }}
+            >
                 {zoomPercent}%
             </Box>
         </Box>

@@ -8,16 +8,26 @@ Source: https://sketchfab.com/3d-models/stylized-rock-f0309cd2e4a347c3996cd7d887
 Title: Stylized Rock
 */
 
-import React from 'react'
-import { useGLTF } from '@react-three/drei'
+import React from "react";
+import { useGLTF } from "@react-three/drei";
 
 export function ModelStylizedRock(props) {
-  const { nodes, materials } = useGLTF('models/stylized_rock-transformed.glb')
-  return (
-    <group {...props} dispose={null}>
-      <mesh geometry={nodes.lp_Material001_0.geometry} material={materials['Material.001']} position={[0.141, -0.043, 0.143]} rotation={[-Math.PI / 2, 0, 0]} />
-    </group>
-  )
+    const { nodes, materials } = useGLTF(
+        "models/stylized_rock-transformed.glb",
+    );
+    return (
+        <group
+            {...props}
+            dispose={null}
+        >
+            <mesh
+                geometry={nodes.lp_Material001_0.geometry}
+                material={materials["Material.001"]}
+                position={[0.141, -0.043, 0.143]}
+                rotation={[-Math.PI / 2, 0, 0]}
+            />
+        </group>
+    );
 }
 
-useGLTF.preload('models/stylized_rock-transformed.glb')
+useGLTF.preload("models/stylized_rock-transformed.glb");

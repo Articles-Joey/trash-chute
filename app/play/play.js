@@ -14,10 +14,9 @@ import SprintMeter from "@/components/UI/SprintMeter";
 import CameraZoomIndicator from "@/components/UI/CameraZoomIndicator";
 import TouchControls from "@/components/UI/TouchControls";
 
-const GameCanvas = dynamic(
-    () => import("@/components/Game/GameCanvas"),
-    { ssr: false },
-);
+const GameCanvas = dynamic(() => import("@/components/Game/GameCanvas"), {
+    ssr: false,
+});
 
 export default function GamePage() {
     const socket = useSocketStore((state) => state.socket);
@@ -40,18 +39,24 @@ export default function GamePage() {
 
     return (
         <Box
-            className={classNames(`${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`, {
-                "menu-open": showMenu,
-                fullscreen: isFullscreen,
-                "show-sidebar": sidebar,
-            })}
+            className={classNames(
+                `${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`,
+                {
+                    "menu-open": showMenu,
+                    fullscreen: isFullscreen,
+                    "show-sidebar": sidebar,
+                },
+            )}
             id={`${process.env.NEXT_PUBLIC_GAME_KEY}-game-page`}
             sx={{ position: "relative", display: "flex" }}
         >
             <GameMenu
                 useStore={useStore}
                 LeftPanelContent={LeftPanelContent}
-                menuBarConfig={{ style: "Corner Button", menuBarButtonPosition: "Left" }}
+                menuBarConfig={{
+                    style: "Corner Button",
+                    menuBarButtonPosition: "Left",
+                }}
                 sidebarConfig={{ style: "Static Panel" }}
             />
             <Box

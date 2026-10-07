@@ -1,22 +1,28 @@
-import { useBox } from "@react-three/cannon"
+import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import { useGameStore } from "@/hooks/useGameStore";
 
-export default function TopCheckpoint({position, args}) {
-
-    const [ref, api] = useBox(() => ({
-        // mass: 50,
-        // type: 'Dynamic',
-        isTrigger: true,
-        args: args,
-        position: position,
-        userData: {
-            topCheckpoint: true
-        }
-    }))
+export default function TopCheckpoint({ position, args }) {
+    const unlocked = useGameStore((state) => state.topCheckpoint);
 
     return (
-        <mesh ref={ref} castShadow>
-            <boxGeometry args={args} />
-            <meshStandardMaterial transparent={true} opacity={0.25} color="red" />
-        </mesh>
-    )
+        <RigidBody
+            type="fixed"
+            position={position}
+            colliders={false}
+            userData={{ topCheckpoint: true }}
+        >
+            <CuboidCollider
+                args={args.map((size) => size / 2)}
+                sensor
+            />
+            <mesh castShadow>
+                <boxGeometry args={args} />
+                <meshStandardMaterial
+                    transparent={true}
+                    opacity={0.25}
+                    color={unlocked ? "green" : "red"}
+                />
+            </mesh>
+        </RigidBody>
+    );
 }
